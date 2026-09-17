@@ -1040,6 +1040,7 @@ function createArrow(arrowNo, points, color) {
                 if ((cx == px) && (cx - nx < 0) && (cy == py) && (cy - ny < 0) && (cz - pz < 0) && (cz == nz)) opt = 5;
                 if ((cx == px) && (cx - nx > 0) && (cy - py < 0) && (cy - ny < 0) && (cz - pz > 0) && (cz == nz)) opt = 4;
                 if ((cx - px < 0) && (cx == nx) && (cy == py) && (cy - ny < 0) && (cz == pz) && (cz - nz > 0)) opt = 6;
+                if ((cx == px) && (cx - nx < 0) && (cy - py < 0) && (cy - ny < 0) && (cz - pz < 0) && (cz == nz)) opt = 5;
             }
             if (segment.faceDirection == FaceDirection.Left) {
                 if ((cx == px) && (cx - nx < 0) && (cy == py) && (cy - ny > 0) && (cz - pz > 0) && (cz == nz)) opt = 4;

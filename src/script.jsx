@@ -114,7 +114,10 @@ const state = {
     showFaceId: false,
     mouseDownLevel: -1,
     volume: true,
-    EditionMode_arrowSelected: -1
+    editionMode_arrowSelected: -1,
+    editionMode_segmentSelected: -1,
+    groupModeEdition: false,
+    lastbutton: -1,
 };
 
 
@@ -657,6 +660,16 @@ function createArrow(arrowNo, points, color) {
     const arrow = new Arrow();
     arrow.arrowNo = arrowNo;
     arrow.points = points;    
+
+
+    arrow.group = 0;
+    if(arrow.points[0].group !== undefined && arrow.points[0].group !== null && arrow.points[0].group!=0){
+        arrow.group = arrow.points[0].group;
+        arrow.groupLook = arrow.points[0].groupLook;
+        arrow.groupPos = arrow.points[0].groupPos;
+    }
+
+    //console.log("-->createArrowNew " + arrowNo + " group " + arrow.group + " points " + points.length);
     let segmentNo = 0;
     let segDirection = Direction.Left;
     let oldFaceNo = points[0].z;
@@ -1579,8 +1592,7 @@ function MoveArrowSegments(arrowNo, segmentNo) {
 
                 //check nex position in face
                 let collision=checkColision(arrowNo, head.faceNo, head.x + dx, head.y + dy);
-                if (collision == false)
-                {
+                if (collision == false && arrow.stopMove != true) {
                     movearrowdirection(arrow, arrowNo, segmentNo, head, dx, dy);
                     setTimeout(function () {
                         //console.log("MoveArrowSegments 1 ->" + arrowNo + " segment " + segmentNo + " movement " + arrow.movementOutFace + "/" + arrow.originalSegmentLenth);
@@ -1590,29 +1602,41 @@ function MoveArrowSegments(arrowNo, segmentNo) {
                 else {
                     movearrowdirection(arrow, arrowNo, segmentNo, head, dx, dy);
                     //collision detected, stop movement
+                    if (arrow.group != 0) {
+                        for (const arrow2 of arrows) {
+                            if (arrow2.group === arrow.group) {
+                                arrow2.stopMove = true;
+                            }
+                        }
+                    }
+
                     setColorArrow(arrowNo, 2); // Set selected arrow color to red
-                    showHudBorder(true);
-                    if (state.volume == true)
-                        audioFailure.play();
-                    currentLevel.NbHeart--;
-                    UpdateHeartNumber(camera, currentLevel.NbHeart, currentLevel.NbHeartTotal);
+                    if (collision == true) { 
+                        showHudBorder(true);
+                        if (state.volume == true)
+                            audioFailure.play();
+                        currentLevel.NbHeart--;
+                        UpdateHeartNumber(camera, currentLevel.NbHeart, currentLevel.NbHeartTotal);
+                    }
                     //set to previous position 
                     
                     setTimeout(function () {
-                        ResetArrow(arrowNo, arrow)
+                        ResetArrow(arrowNo, arrow);
                         setColorArrow(arrowNo, 2);
-                        showHudBorder(false);
-                        if (currentLevel.NbHeart <= 0) {
-                            console.log("Game Over");
-                            if (state.volume == true)
-                            audioLevelFailure.play();
-                            setTimeout(function () {
-                                hideAll();
-                                UpdateLevelText(camera, -3);
+                        if (collision == true) { 
+                            showHudBorder(false);
+                            if (currentLevel.NbHeart <= 0) {
+                                console.log("Game Over");
+                                if (state.volume == true)
+                                    audioLevelFailure.play();
                                 setTimeout(function () {
-                                    loadLevel(currentLevelNo);
-                                }, 1000);
-                            }, 500);
+                                    hideAll();
+                                    UpdateLevelText(camera, -3);
+                                    setTimeout(function () {
+                                        loadLevel(currentLevelNo);
+                                    }, 1000);
+                                }, 500);
+                            }
                         }
                     }, 300);
                    
@@ -1673,9 +1697,30 @@ function selectArrow(arrowNo, segmentNo) {
     //console.log("Selected arrow: " + arrowNo+ " segment=" + segmentNo);
     if (state.volume == true)
         audioClick.play();
-    setColorArrow(arrowNo, 1); // Set selected arrow color to white
-    setTimeout(function () {
-        MoveArrow(arrowNo, segmentNo) }, 100);
+    let group = 0;
+    for (const arrow of arrows) {
+        if (arrow.arrowNo === arrowNo) {
+            group = arrow.group;
+            break;
+        }
+    }
+    if (group == 0) {
+        setColorArrow(arrowNo, 1); // Set selected arrow color to white
+        setTimeout(function () {
+            MoveArrow(arrowNo, segmentNo)
+        }, 100);
+    } else {
+        console.log("move group " + group);
+        for (const arrow of arrows) {
+            if (arrow.group === group) {
+                setColorArrow(arrow.arrowNo, 1); // Set selected arrow color to white
+                setTimeout(function () {
+                    MoveArrow(arrow.arrowNo, segmentNo)
+                }, 100);
+            }
+        }
+    }
+    
     
 }
 function setColorArrow(arrowNo, color) {
@@ -1768,7 +1813,7 @@ function addPointToArrow(currentArrow, x, y, faceNo) {
 
     currentArrow.points.push(new THREE.Vector3(x, y, faceNo));
     currentArrow.clonedArrowPoints = JSON.stringify(currentArrow.points);//copy arrow
-    ResetArrow(state.EditionMode_arrowSelected, currentArrow);
+    ResetArrow(state.editionMode_arrowSelected, currentArrow);
 }
 //-----------------------------------------------------------------
 //segments
@@ -2143,6 +2188,8 @@ function CreateLevel(level) {
     currentLevel.NbArrow = currentLevel.ArrowsPoints.length;
     currentLevel.NbHeart = currentLevel.NbHeartTotal;
     ArrowColor = Number(currentLevel.ArrowColor);
+    
+    
 
     updateTexture(textureWhiteHead);
     updateTexture(textureWhiteBody);
@@ -2387,14 +2434,16 @@ function addEvents() {
                 console.log("   m: modify selected arrow");
                 console.log("   arrows can be selected by clicking on them");
                 console.log("   del: delete current arrow");
+                console.log("   g: show groups of arrows");
                 materialCube.map = textureSquare;
                 materialCube.transparent = false; // Required for opacity to work
                 materialCube.opacity = 1;       // 100% see-through
                 materialCube.depthTest = true;
                 materialCube.alphaTest = 0.01
                 materialCube.needsUpdate = true;
-                setColorArrow(state.EditionMode_arrowSelected, 0);
-                state.EditionMode_arrowSelected = -1;
+                setColorArrow(state.editionMode_arrowSelected, 0);
+                state.editionMode_arrowSelected = -1;
+                state.editionMode_segmentSelected = -1;
             } else {
                 console.log("Edition mode OFF");
                 materialCube.map = null;
@@ -2402,8 +2451,9 @@ function addEvents() {
                 materialCube.opacity = 0.70;       // 70% see-through
                 materialCube.depthTest = true;
                 materialCube.needsUpdate = true;
-                setColorArrow(state.EditionMode_arrowSelected, 0);
-                state.EditionMode_arrowSelected = -1;
+                setColorArrow(state.editionMode_arrowSelected, 0);
+                state.editionMode_arrowSelected = -1;
+                state.editionMode_segmentSelected = -1;
             }
         }
 
@@ -2418,9 +2468,10 @@ function addEvents() {
                 if (state.editionModeCreation === true) {
                     //end of arrow creation
                     state.editionModeCreation = false;
-                    console.log("Edition mode: closed arrow creation " + state.EditionMode_arrowSelected);
-                    setColorArrow(state.EditionMode_arrowSelected, 0);
-                    state.EditionMode_arrowSelected = -1;
+                    console.log("Edition mode: closed arrow creation " + state.editionMode_arrowSelected);
+                    setColorArrow(state.editionMode_arrowSelected, 0);
+                    state.editionMode_arrowSelected = -1;
+                    state.editionMode_segmentSelected = -1;
                     UpdateLineText(camera, arrows.length);
                 }
                 else {
@@ -2433,8 +2484,9 @@ function addEvents() {
                             higherArrow = arrows[i].arrowNo;
                         }
                     }
-                    state.EditionMode_arrowSelected = higherArrow + 1;
-                    console.log("Edition mode: new arrow created " + state.EditionMode_arrowSelected);
+                    state.editionMode_arrowSelected = higherArrow + 1;
+                    state.editionMode_segmentSelected = -1;
+                    console.log("Edition mode: new arrow created " + state.editionMode_arrowSelected);
 
                 }
             }
@@ -2443,25 +2495,25 @@ function addEvents() {
                 if (state.editionModeCreation === true) {
                     let currentArrow = undefined;
                     for (let i = 0; i < arrows.length; i++) {
-                        if (arrows[i].arrowNo == state.EditionMode_arrowSelected) {
+                        if (arrows[i].arrowNo == state.editionMode_arrowSelected) {
                             currentArrow = arrows[i];
                         }
                     }
                     if ((currentArrow != undefined) && (currentArrow.points.length > 0)) {
-                        console.log("Edition mode: remove last point of arrow " + state.EditionMode_arrowSelected);
+                        console.log("Edition mode: remove last point of arrow " + state.editionMode_arrowSelected);
                         currentArrow.points.pop();
                         currentArrow.clonedArrowPoints = JSON.stringify(currentArrow.points);//copy arrow
-                        ResetArrow(state.EditionMode_arrowSelected, currentArrow);
+                        ResetArrow(state.editionMode_arrowSelected, currentArrow);
                     }
 
 
                 }
             }
             if (event.key == "m" || event.key == "M") {
-                if (state.EditionMode_arrowSelected != -1) {
-                    console.log("Modify arrow " + state.EditionMode_arrowSelected);
+                if (state.editionMode_arrowSelected != -1) {
+                    console.log("Modify arrow " + state.editionMode_arrowSelected);
                     state.editionModeCreation = true;
-
+                    state.editionMode_segmentSelected = -1;
                 }
             }
             if (event.key == "d" || event.key == "D") {
@@ -2485,12 +2537,32 @@ function addEvents() {
                 console.log(JSON.stringify(newLevel));
 
             }
+            if (event.key == "g" || event.key == "G") {
+                if (state.groupModeEdition == false) {
+                    state.groupModeEdition = true;
+                    console.log("Group edition:");
+                    console.log("     g: to exit group edition:");
+                    console.log("     left click: select left side bridge");
+                    console.log("     middle click: select middle bridge");
+                    console.log("     right click: select right side bridge");
+                    console.log("     0-9: select group");
+
+                    for (let i = 0; i < arrows.length; i++) {
+                        if (arrows[i].group > 0) {
+                            console.log(`Arrow ${arrows[i].arrowNo} is in group ${arrows[i].group}`);
+                        }
+                    }
+                } else {
+                    state.groupModeEdition = false;
+                    console.log("Group edition exit");
+                }
+            }
             if (event.code == "Delete") {
-                if (state.EditionMode_arrowSelected != -1) {
-                    console.log("delete arrow " + state.EditionMode_arrowSelected);
+                if (state.editionMode_arrowSelected != -1) {
+                    console.log("delete arrow " + state.editionMode_arrowSelected);
                     for (let i = 0; i < arrows.length; i++) {
                         const arrow = arrows[i];
-                        if (arrow.arrowNo == state.EditionMode_arrowSelected) {
+                        if (arrow.arrowNo == state.editionMode_arrowSelected) {
                             for (let j = 0; j < arrow.segments.length; j++) {
                                 group.remove(arrow.segments[j].mesh);
                                 group.remove(arrow.segments[j].meshBack);
@@ -2507,11 +2579,49 @@ function addEvents() {
                         }
 
                     }
-                    console.log("!!!!!! EditionMode_arrowSelected =-1");
-                    state.EditionMode_arrowSelected = -1;
+                    console.log("!!!!!! editionMode_arrowSelected =-1");
+                    state.editionMode_arrowSelected = -1;
+                    state.editionMode_segmentSelected = -1;
 
                 }
             }
+
+            const isNumber = /^[0-9]$/.test(event.key);
+            if (isNumber) {
+                let numKey = parseInt(event.key);
+                console.log("key pressed " + event.key + " code=" + event.code+ " => " + numKey);   
+                if (state.groupModeEdition == true) {
+                    if (state.editionMode_arrowSelected != -1) {
+                        if (state.editionMode_segmentSelected != -1) {
+                            let segmentIndex = -1;
+                            for (let i = 0; i < arrows.length; i++) {
+                                if (arrows[i].arrowNo == state.editionMode_arrowSelected) {
+                                    console.log(`Set Group ${numKey} to arrow ${state.editionMode_arrowSelected} segment ${state.editionMode_segmentSelected} with look ` + state.lastbutton);
+                                    for (let j = 0; j < arrows[i].segments.length; j++) {
+                                        if (arrows[i].segments[j].segmentNo == state.editionMode_segmentSelected) {
+                                            segmentIndex = j;
+                                        }
+                                    }
+
+                                    arrows[i].points[0].group = numKey;
+                                    arrows[i].points[0].groupLook = state.lastbutton;
+                                    arrows[i].points[0].groupPos = segmentIndex;
+                                    console.log("arrow", arrows[i]);
+                                    
+                               
+                                    arrows[i].group = numKey;
+                                }
+                            }
+                        }
+                        else
+                            console.log("No segment selected, please select a segment first to set group number");
+                    }
+                    else
+                        console.log("No arrow selected, please select an arrow first to set group number");
+                }
+            }
+           // else
+           //     console.log("key pressed " + event.key + " code=" + event.code);
         }
 
     });
@@ -2549,6 +2659,7 @@ function addEvents() {
         if (state.mouseDownLevel !== currentLevelNo)
             return;
 
+        state.lastbutton = event.button
         //controls.staticMoving = true
         //setTimeout(function () { controls.staticMoving = false; }, 500);
         /*
@@ -2577,12 +2688,13 @@ function addEvents() {
                     selectArrow(intersects[0].object.userData.arrowNo, intersects[0].object.userData.segmentNo)
                 else {
                     if (state.editionModeCreation === false) {
-                        state.EditionMode_arrowSelected = intersects[0].object.userData.arrowNo;
-                       // console.log("Edition mode: arrow selected " + state.EditionMode_arrowSelected + "segment No" + intersects[0].object.userData.segmentNo);
+                        state.editionMode_arrowSelected = intersects[0].object.userData.arrowNo;
+                        state.editionMode_segmentSelected = intersects[0].object.userData.segmentNo;
+                       // console.log("Edition mode: arrow selected " + state.editionMode_arrowSelected + "segment No" + intersects[0].object.userData.segmentNo);
 
                         //log segment type and face direction
                         for (let i = 0; i < arrows.length; i++) {
-                            if (arrows[i].arrowNo == state.EditionMode_arrowSelected) {
+                            if (arrows[i].arrowNo == state.editionMode_arrowSelected) {
                                 for (let j = 0; j < arrows[i].segments.length; j++) {
                                     // console.log("   segment " + j + " type=" + arrows[i].segments[j].type.description + " face direction=" + arrows[i].segments[j].faceDirection.description + " segment direction=" + arrows[i].segments[j].direction.description + " prev segment direction=" + arrows[i].segments[j].prev_direction.description);
                                     if (arrows[i].segments[j].segmentNo == intersects[0].object.userData.segmentNo) {
@@ -2599,7 +2711,7 @@ function addEvents() {
                                             let str = "if (segment.type==Type." + arrows[i].segments[j].type.description + " && segment.prev_direction==Direction." + arrows[i].segments[j].prev_direction.description + " && segment.direction==Direction." + arrows[i].segments[j].direction.description + str_nextDirection + " && segment.faceDirection==FaceDirection." + arrows[i].segments[j].faceDirection.description + "&& segment.prev_faceDirection==FaceDirection." + arrows[i].segments[j].prev_faceDirection.description + " && segment.faceDirection==FaceDirection." + arrows[i].segments[j].faceDirection.description + str_nextFaceDirection + ")";
                                             console.log(str);
                                             */
-                                            console.log("Arrow No " + intersects[0].object.userData.arrowNo + " segment No " + intersects[0].object.userData.segmentNo, target)
+                                            console.log("Arrow No " + intersects[0].object.userData.arrowNo + " segment No " + intersects[0].object.userData.segmentNo)
                                         }
                                         if (event.button == 1 ||event.button == 2)// middle or right click
                                         {
@@ -2673,8 +2785,8 @@ function addEvents() {
                                 }
                             }
                         }
-                        setColorArrow(state.EditionMode_arrowSelected, 1);
-                        setTimeout(function () { setColorArrow(state.EditionMode_arrowSelected, 0); }, 100);
+                        setColorArrow(state.editionMode_arrowSelected, 1);
+                        setTimeout(function () { setColorArrow(state.editionMode_arrowSelected, 0); }, 100);
                     }
                 }
         }
@@ -2739,11 +2851,11 @@ function addEvents() {
                         return;
                         */
                     if (state.editionModeCreation == true) {
-                        console.log("Edition mode: add point to arrow " + state.EditionMode_arrowSelected + " at face " + clickedObject.userData.faceNo + " x=" + x + " y=" + y);
+                        console.log("Edition mode: add point to arrow " + state.editionMode_arrowSelected + " at face " + clickedObject.userData.faceNo + " x=" + x + " y=" + y);
                         let currentArrow = undefined;
                         //add point to current arrow
                         for (let i = 0; i < arrows.length; i++) {
-                            if (arrows[i].arrowNo == state.EditionMode_arrowSelected) {
+                            if (arrows[i].arrowNo == state.editionMode_arrowSelected) {
                                 currentArrow = arrows[i];
                             }
                         }
@@ -2751,8 +2863,8 @@ function addEvents() {
                             const arrow_Points = [
                                 new THREE.Vector3(x, y, clickedObject.userData.faceNo),
                             ];
-                            createArrow(state.EditionMode_arrowSelected, arrow_Points, ArrowColor);
-                            setColorArrow(state.EditionMode_arrowSelected, 1);
+                            createArrow(state.editionMode_arrowSelected, arrow_Points, ArrowColor);
+                            setColorArrow(state.editionMode_arrowSelected, 1);
                         }
                         else {
                             //add point here
@@ -2760,12 +2872,12 @@ function addEvents() {
                             {
                                 if (x == currentArrow.points[currentArrow.points.length - 1].x || y == currentArrow.points[currentArrow.points.length - 1].y) {
                                     addPointToArrow(currentArrow, x, y, clickedObject.userData.faceNo);
-                                    setColorArrow(state.EditionMode_arrowSelected, 1);
+                                    setColorArrow(state.editionMode_arrowSelected, 1);
                                 }
                             }
                             else {//different face, no checks
                                 addPointToArrow(currentArrow, x, y, clickedObject.userData.faceNo);
-                                setColorArrow(state.EditionMode_arrowSelected, 1);
+                                setColorArrow(state.editionMode_arrowSelected, 1);
                             }
                         }
                      }
@@ -2792,10 +2904,6 @@ function addEvents() {
         
     });
   
- 
-    
-
-
 }
 //-----------------------------------------------------------------
 //handle cookies

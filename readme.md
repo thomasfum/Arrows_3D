@@ -1,4 +1,7 @@
-# Three.js Journey
+# LabCube project
+
+## Description
+Implementation in js with three. js of an android game app.
 
 ## Setup
 Download [Node.js](https://nodejs.org/en/download/).

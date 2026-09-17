@@ -1,6 +1,8 @@
 //----------------------------------------------------------------------
 //
 // TODO:
+// exclude dist folder from git
+
 //----------------------------------------------------------------------
 
 import * as THREE from 'three'
@@ -118,6 +120,7 @@ const state = {
     editionMode_segmentSelected: -1,
     groupModeEdition: false,
     lastbutton: -1,
+    collisionAreadyCounted : false
 };
 
 
@@ -179,6 +182,10 @@ const textureReset = await loader.loadAsync('refresh-ccw.png');
 const textureVolumeOn = await loader.loadAsync('volume-2.png');
 const textureVolumeOff = await loader.loadAsync('volume-x.png');
 const textureCadre = await loader.loadAsync('cadre.png');
+const textureBridgeCentral = await loader.loadAsync('bridgeCentral.png');
+const textureBridgeSide1 = await loader.loadAsync('bridgeSide.png');
+const textureBridgeSide2 = await loader.loadAsync('bridgeSide.png');
+textureBridgeSide2.rotation = Math.PI;
 
 const audioClick = new Audio('click.mp3');
 const audioLevelSuccess = new Audio('levelSuccess.mp3');
@@ -311,7 +318,19 @@ PrepareMaterialHUD(materialVolume, 0x8381FF);
 
 
 const materialCadre = new THREE.MeshBasicMaterial({ map: textureCadre, side: THREE.DoubleSide });
-PrepareMaterialHUD(materialCadre, ArrowColorRed);  
+PrepareMaterialHUD(materialCadre, ArrowColorRed);
+
+const materialBridgeCentral = new THREE.MeshBasicMaterial({ map: textureBridgeCentral, side: THREE.DoubleSide });
+PrepareMaterial(materialBridgeCentral);  
+
+const materialBridgeSide1 = new THREE.MeshBasicMaterial({ map: textureBridgeSide1, side: THREE.DoubleSide });
+PrepareMaterial(materialBridgeSide1);  
+
+const materialBridgeSide2 = new THREE.MeshBasicMaterial({ map: textureBridgeSide2, side: THREE.DoubleSide });
+PrepareMaterial(materialBridgeSide2);  
+
+
+
 
 //font
 const loaderFont = new FontLoader();
@@ -1363,8 +1382,34 @@ function createArrow(arrowNo, points, color) {
             }
         }
     }
+    showGroup(arrow);
     arrows.push(arrow);
 }
+
+function showGroup(arrow) {
+    if (arrow.group > 0) {
+        //console.log("GROUP " + arrow.group + " " + arrow.arrowNo + " + segment  " + arrow.groupPos);
+        for (let i = 0; i < arrow.segments.length; i++) {
+            let segment = arrow.segments[i];
+            if (arrow.groupPos == i) {
+                //console.log("GROUP " + arrow.group + " " + arrow.arrowNo + " + segment FOUND " + segment.segmentNo);
+                segment.mesh.prev_material = segment.mesh.material;
+                if (arrow.groupLook == 1)
+                    segment.mesh.material = materialBridgeCentral;
+                if (arrow.groupLook == 0)
+                    segment.mesh.material = materialBridgeSide1;
+                if (arrow.groupLook == 2)
+                    segment.mesh.material = materialBridgeSide2;
+            }
+            else {
+                if (segment.mesh.prev_material != undefined && segment.mesh.prev_material != null) {
+                    segment.mesh.material = segment.mesh.prev_material;
+                }
+            }
+        }
+    }
+}
+
 function rotateBodySegmentMesh(segment) {
     if (segment.direction === Direction.Right) {
         segment.mesh.rotation.z = Math.PI / 2;
@@ -1531,7 +1576,7 @@ function movearrowdirection(arrow,arrowNo, segmentNo, head, dx, dy) {
     lastHead.type = Type.Body;
     lastHead.mesh.material = materialBody;
     lastHead.meshBack.material = materialBodyBack;
-    
+    showGroup(arrow);
 
     // check if all has left the faces
     let allLeft = true;
@@ -1611,7 +1656,8 @@ function MoveArrowSegments(arrowNo, segmentNo) {
                     }
 
                     setColorArrow(arrowNo, 2); // Set selected arrow color to red
-                    if (collision == true) { 
+                    if (collision == true && state.collisionAreadyCounted == false) { 
+                        state.collisionAreadyCounted = true;
                         showHudBorder(true);
                         if (state.volume == true)
                             audioFailure.play();
@@ -1710,7 +1756,7 @@ function selectArrow(arrowNo, segmentNo) {
             MoveArrow(arrowNo, segmentNo)
         }, 100);
     } else {
-        console.log("move group " + group);
+        //console.log("move group " + group);
         for (const arrow of arrows) {
             if (arrow.group === group) {
                 setColorArrow(arrow.arrowNo, 1); // Set selected arrow color to white
@@ -1805,6 +1851,7 @@ function setColorArrow(arrowNo, color) {
                     console.error("setColorArrow unknown segment type " + segment.type.description);
                 }
             }
+            showGroup(arrow);
             break;
         }
     }
@@ -2204,6 +2251,9 @@ function CreateLevel(level) {
     updateTexture(textureVolumeOff);
     updateTexture(textureVolumeOn);
     updateTexture(textureCadre);
+    updateTexture(textureBridgeCentral);
+    updateTexture(textureBridgeSide1);
+    updateTexture(textureBridgeSide2);
 
     materialHead.color.setHex(ArrowColor);
     materialBody.color.setHex(ArrowColor);
@@ -2658,6 +2708,9 @@ function addEvents() {
         state.previousNormalizedY = null;
         if (state.mouseDownLevel !== currentLevelNo)
             return;
+
+
+        state.collisionAreadyCounted = false;
 
         state.lastbutton = event.button
         //controls.staticMoving = true

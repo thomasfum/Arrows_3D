@@ -878,523 +878,151 @@ function createArrow(arrowNo, points, color) {
             nz = arrow.segments[i + 1].mesh.position.z.toFixed(3) - 0;
         }
 
+        if (segment.type == Type.FromSide || segment.type == Type.ToSide) {
 
-        if (segment.type == Type.FromSide && i < arrow.segments.length - 1) {
+            let ax = undefined;
+            let ay = undefined;
+            let az = undefined;
 
-            let nextFaceDirection = arrow.segments[i + 1].faceDirection;
+            let bx = undefined;
+            let by = undefined;
+            let bz = undefined;
+
+            if (segment.type == Type.FromSide) {
+                ax  = nx;
+                ay = ny;
+                az = nz;
+
+                bx = px;
+                by = py;
+                bz = pz;
+            }
+
+            if (segment.type == Type.ToSide) {
+
+                ax = px;
+                ay = py;
+                az = pz;
+
+                bx = nx;
+                by = ny;
+                bz = nz;
+            }
             //---- UP
             //Right
-            if (segment.faceDirection == FaceDirection.Up && (cx - nx < 0) && cz == pz) opt = 1;
-            if (segment.faceDirection == FaceDirection.Up && (cx - nx < 0) && cz > pz) opt = 4;
-            if (segment.faceDirection == FaceDirection.Up && (cx - nx < 0) && cz < pz) opt = 3;
+            if (segment.faceDirection == FaceDirection.Up && (cx - ax < 0) && cz == bz) opt = 1;
+            if (segment.faceDirection == FaceDirection.Up && (cx - ax < 0) && cz > bz) opt = 4;
+            if (segment.faceDirection == FaceDirection.Up && (cx - ax < 0) && cz < bz) opt = 3;
             //Left
-            if (segment.faceDirection == FaceDirection.Up && (cx - nx > 0) && cz == pz) opt = 1;
-            if (segment.faceDirection == FaceDirection.Up && (cx - nx > 0) && cz > pz) opt = 6;
-            if (segment.faceDirection == FaceDirection.Up && (cx - nx > 0) && cz < pz) opt = 5;
+            if (segment.faceDirection == FaceDirection.Up && (cx - ax > 0) && cz == bz) opt = 1;
+            if (segment.faceDirection == FaceDirection.Up && (cx - ax > 0) && cz > bz) opt = 6;
+            if (segment.faceDirection == FaceDirection.Up && (cx - ax > 0) && cz < bz) opt = 5;
             //Front
-            if (segment.faceDirection == FaceDirection.Up && (cz - nz < 0) && cx == px) opt = 1;
-            if (segment.faceDirection == FaceDirection.Up && (cz - nz < 0) && cx > px) opt = 5;
-            if (segment.faceDirection == FaceDirection.Up && (cz - nz < 0) && cx < px) opt = 3;
+            if (segment.faceDirection == FaceDirection.Up && (cz - az < 0) && cx == bx) opt = 1;
+            if (segment.faceDirection == FaceDirection.Up && (cz - az < 0) && cx > bx) opt = 5;
+            if (segment.faceDirection == FaceDirection.Up && (cz - az < 0) && cx < bx) opt = 3;
             //back
-            if (segment.faceDirection == FaceDirection.Up && (cz - nz > 0) && cx == px) opt = 1;
-            if (segment.faceDirection == FaceDirection.Up && (cz - nz > 0) && cx > px) opt = 6;
-            if (segment.faceDirection == FaceDirection.Up && (cz - nz > 0) && cx < px) opt = 4;
+            if (segment.faceDirection == FaceDirection.Up && (cz - az > 0) && cx == bx) opt = 1;
+            if (segment.faceDirection == FaceDirection.Up && (cz - az > 0) && cx > bx) opt = 6;
+            if (segment.faceDirection == FaceDirection.Up && (cz - az > 0) && cx < bx) opt = 4;
 
             //---- DOWN
-            //back
-            if (segment.faceDirection == FaceDirection.Down && (cz - nz > 0) && cx == px) opt = 1;
-            if (segment.faceDirection == FaceDirection.Down && (cz - nz > 0) && cx > px) opt = 4;
-            if (segment.faceDirection == FaceDirection.Down && (cz - nz > 0) && cx < px) opt = 6;
-            //front
-            if (segment.faceDirection == FaceDirection.Down && (cz - nz < 0) && cx == px) opt = 1;
-            if (segment.faceDirection == FaceDirection.Down && (cz - nz < 0) && cx > px) opt = 3;
-            if (segment.faceDirection == FaceDirection.Down && (cz - nz < 0) && cx < px) opt = 5;
-            //left
-            if (segment.faceDirection == FaceDirection.Down && (cx - nx > 0) && cz == pz) opt = 1;
-            if (segment.faceDirection == FaceDirection.Down && (cx - nx > 0) && cz > pz) opt = 4;
-            if (segment.faceDirection == FaceDirection.Down && (cx - nx > 0) && cz < pz) opt = 3;
             //right
-            if (segment.faceDirection == FaceDirection.Down && (cx - nx < 0) && cz == pz) opt = 1;
-            if (segment.faceDirection == FaceDirection.Down && (cx - nx < 0) && cz > pz) opt = 6;
-            if (segment.faceDirection == FaceDirection.Down && (cx - nx < 0) && cz < pz) opt = 5;
+            if (segment.faceDirection == FaceDirection.Down && (cx - ax < 0) && cz == bz) opt = 1;
+            if (segment.faceDirection == FaceDirection.Down && (cx - ax < 0) && cz > bz) opt = 6;
+            if (segment.faceDirection == FaceDirection.Down && (cx - ax < 0) && cz < bz) opt = 5;
+            //left
+            if (segment.faceDirection == FaceDirection.Down && (cx - ax > 0) && cz == bz) opt = 1;
+            if (segment.faceDirection == FaceDirection.Down && (cx - ax > 0) && cz > bz) opt = 4;
+            if (segment.faceDirection == FaceDirection.Down && (cx - ax > 0) && cz < bz) opt = 3;
+            //front
+            if (segment.faceDirection == FaceDirection.Down && (cz - az < 0) && cx == bx) opt = 1;
+            if (segment.faceDirection == FaceDirection.Down && (cz - az < 0) && cx > bx) opt = 3;
+            if (segment.faceDirection == FaceDirection.Down && (cz - az < 0) && cx < bx) opt = 5;
+            //back
+            if (segment.faceDirection == FaceDirection.Down && (cz - az > 0) && cx == bx) opt = 1;
+            if (segment.faceDirection == FaceDirection.Down && (cz - az > 0) && cx > bx) opt = 4;
+            if (segment.faceDirection == FaceDirection.Down && (cz - az > 0) && cx < bx) opt = 6;
+            
 
             //---- FRONT
             //up
-            if (segment.faceDirection == FaceDirection.Front && (cy - ny < 0) && cx == px) opt = 1;
-            if (segment.faceDirection == FaceDirection.Front && (cy - ny < 0) && cx > px) opt = 3;
-            if (segment.faceDirection == FaceDirection.Front && (cy - ny < 0) && cx < px) opt = 5;
+            if (segment.faceDirection == FaceDirection.Front && (cy - ay < 0) && cx == bx) opt = 1;
+            if (segment.faceDirection == FaceDirection.Front && (cy - ay < 0) && cx > bx) opt = 3;
+            if (segment.faceDirection == FaceDirection.Front && (cy - ay < 0) && cx < bx) opt = 5;
             //down
-            if (segment.faceDirection == FaceDirection.Front &&  (cy - ny > 0) && cx == px) opt = 1;
-            if (segment.faceDirection == FaceDirection.Front &&  (cy - ny > 0) && cx > px) opt = 4;
-            if (segment.faceDirection == FaceDirection.Front &&  (cy - ny > 0) && cx < px) opt = 6;
+            if (segment.faceDirection == FaceDirection.Front && (cy - ay > 0) && cx == bx) opt = 1;
+            if (segment.faceDirection == FaceDirection.Front && (cy - ay > 0) && cx > bx) opt = 4;
+            if (segment.faceDirection == FaceDirection.Front && (cy - ay > 0) && cx < bx) opt = 6;
             //right
-            if (segment.faceDirection == FaceDirection.Front &&  (cx - nx < 0) && cy == py) opt = 1;
-            if (segment.faceDirection == FaceDirection.Front &&  (cx - nx < 0) && cy > py) opt = 6;
-            if (segment.faceDirection == FaceDirection.Front &&  (cx - nx < 0) && cy < py) opt = 5;
+            if (segment.faceDirection == FaceDirection.Front && (cx - ax < 0) && cy == by) opt = 1;
+            if (segment.faceDirection == FaceDirection.Front && (cx - ax < 0) && cy > by) opt = 6;
+            if (segment.faceDirection == FaceDirection.Front && (cx - ax < 0) && cy < by) opt = 5;
             //left
-            if (segment.faceDirection == FaceDirection.Front && (cx - nx > 0) && cy == py) opt = 1;
-            if (segment.faceDirection == FaceDirection.Front && (cx - nx > 0) && cy > py) opt = 4;
-            if (segment.faceDirection == FaceDirection.Front && (cx - nx > 0) && cy < py) opt = 3;
-
-            //---- RIGHT
-            //up
-            if (segment.faceDirection == FaceDirection.Right && (cy - ny < 0) && cz == pz) opt = 1;
-            if (segment.faceDirection == FaceDirection.Right && (cy - ny < 0) && cz > pz) opt = 5;
-            if (segment.faceDirection == FaceDirection.Right && (cy - ny < 0) && cz < pz) opt = 3;
-            //down
-            if (segment.faceDirection == FaceDirection.Right && (cy - ny > 0) && cz == pz) opt = 1;
-            if (segment.faceDirection == FaceDirection.Right && (cy - ny > 0) && cz > pz) opt = 6;
-            if (segment.faceDirection == FaceDirection.Right && (cy - ny > 0) && cz < pz) opt = 4;
-            //front
-            if (segment.faceDirection == FaceDirection.Right && (cz - nz < 0) && cy == py) opt = 1;
-            if (segment.faceDirection == FaceDirection.Right && (cz - nz < 0) && cy > py) opt = 4;
-            if (segment.faceDirection == FaceDirection.Right && (cz - nz < 0) && cy < py) opt = 3;
-            //back
-            if (segment.faceDirection == FaceDirection.Right && (cz - nz > 0) && cy == py) opt = 1;
-            if (segment.faceDirection == FaceDirection.Right && (cz - nz > 0) && cy > py) opt = 6;
-            if (segment.faceDirection == FaceDirection.Right && (cz - nz > 0) && cy < py) opt = 5;
-
-            //---- BACK
-            //right
-            if (segment.faceDirection == FaceDirection.Back && (cx - nx < 0) && cy == py) opt = 1;
-            if (segment.faceDirection == FaceDirection.Back && (cx - nx < 0) && cy > py) opt = 5;
-            if (segment.faceDirection == FaceDirection.Back && (cx - nx < 0) && cy < py) opt = 6;
-            //left
-            if (segment.faceDirection == FaceDirection.Back && (cx - nx > 0) && cy == py) opt = 1;
-            if (segment.faceDirection == FaceDirection.Back && (cx - nx > 0) && cy > py) opt = 3;
-            if (segment.faceDirection == FaceDirection.Back && (cx - nx > 0) && cy < py) opt = 4;
-            //down
-            if (segment.faceDirection == FaceDirection.Back && (cy - ny > 0) && cx == px) opt = 1;
-            if (segment.faceDirection == FaceDirection.Back && (cy - ny > 0) && cx > px) opt = 3;
-            if (segment.faceDirection == FaceDirection.Back && (cy - ny > 0) && cx < px) opt = 5;
-            //up
-            if (segment.faceDirection == FaceDirection.Back && (cy - ny < 0) && cx == px) opt = 1;
-            if (segment.faceDirection == FaceDirection.Back && (cy - ny < 0) && cx > px) opt = 4;
-            if (segment.faceDirection == FaceDirection.Back && (cy - ny < 0) && cx < px) opt = 6;
-
-            //--- LEFT
-            //back
-            if (segment.faceDirection == FaceDirection.Left && (cz - nz > 0) && cy == py) opt = 1;
-            if (segment.faceDirection == FaceDirection.Left && (cz - nz > 0) && cy > py) opt = 4;
-            if (segment.faceDirection == FaceDirection.Left && (cz - nz > 0) && cy < py) opt = 3;
-            //front
-            if (segment.faceDirection == FaceDirection.Left && (cz - nz < 0) && cy == py) opt = 1;
-            if (segment.faceDirection == FaceDirection.Left && (cz - nz < 0) && cy > py) opt = 6;
-            if (segment.faceDirection == FaceDirection.Left && (cz - nz < 0) && cy < py) opt = 5;
-            //down
-            if (segment.faceDirection == FaceDirection.Left && (cy - ny > 0) && cz == pz) opt = 1;
-            if (segment.faceDirection == FaceDirection.Left && (cy - ny > 0) && cz > pz) opt = 4;
-            if (segment.faceDirection == FaceDirection.Left && (cy - ny > 0) && cz < pz) opt = 6;
-            //up
-            if (segment.faceDirection == FaceDirection.Left && (cy - ny < 0) && cz == pz) opt = 1;
-            if (segment.faceDirection == FaceDirection.Left && (cy - ny < 0) && cz > pz) opt = 3;
-            if (segment.faceDirection == FaceDirection.Left && (cy - ny < 0) && cz < pz) opt = 5;
-        }
-
-        if (segment.type == Type.ToSide && i > 0) {
-
-            let prevFaceDirection = arrow.segments[i - 1].faceDirection;
-            //---- UP
-            //Right
-            if (segment.faceDirection == FaceDirection.Up && (cx - px < 0) && cz == nz) opt = 1;
-            if (segment.faceDirection == FaceDirection.Up && (cx - px < 0) && cz > nz) opt = 4;
-            if (segment.faceDirection == FaceDirection.Up && (cx - px < 0) && cz < nz) opt = 3;
-            //Left
-            if (segment.faceDirection == FaceDirection.Up && (cx - px > 0) && cz == nz) opt = 1;
-            if (segment.faceDirection == FaceDirection.Up && (cx - px > 0) && cz > nz) opt = 6;
-            if (segment.faceDirection == FaceDirection.Up && (cx - px > 0) && cz < nz) opt = 5;
-            //Front
-            if (segment.faceDirection == FaceDirection.Up && (cz - pz < 0) && cx == nx) opt = 1;
-            if (segment.faceDirection == FaceDirection.Up && (cz - pz < 0) && cx > nx) opt = 5;
-            if (segment.faceDirection == FaceDirection.Up && (cz - pz < 0) && cx < nx) opt = 3;
-            //back
-            if (segment.faceDirection == FaceDirection.Up && (cz - pz > 0) && cx == nx) opt = 1;
-            if (segment.faceDirection == FaceDirection.Up && (cz - pz > 0) && cx > nx) opt = 6;
-            if (segment.faceDirection == FaceDirection.Up && (cz - pz > 0) && cx < nx) opt = 4;
-
-            //---- DOWN
-            //back
-            if (segment.faceDirection == FaceDirection.Down && (cz - pz > 0) && cx == nx) opt = 1;
-            if (segment.faceDirection == FaceDirection.Down && (cz - pz > 0) && cx > nx) opt = 4;
-            if (segment.faceDirection == FaceDirection.Down && (cz - pz > 0) && cx < nx) opt = 6;
-            //front
-            if (segment.faceDirection == FaceDirection.Down && (cz - pz < 0) && cx == nx) opt = 1;
-            if (segment.faceDirection == FaceDirection.Down && (cz - pz < 0) && cx > nx) opt = 3;
-            if (segment.faceDirection == FaceDirection.Down && (cz - pz < 0) && cx < nx) opt = 5;
-            //left
-            if (segment.faceDirection == FaceDirection.Down && (cx - px > 0) && cz == nz) opt = 1;
-            if (segment.faceDirection == FaceDirection.Down && (cx - px > 0) && cz > nz) opt = 4;
-            if (segment.faceDirection == FaceDirection.Down && (cx - px > 0) && cz < nz) opt = 3;
-            //right
-            if (segment.faceDirection == FaceDirection.Down && (cx - px < 0) && cz == nz) opt = 1;
-            if (segment.faceDirection == FaceDirection.Down && (cx - px < 0) && cz > nz) opt = 6;
-            if (segment.faceDirection == FaceDirection.Down && (cx - px < 0) && cz < nz) opt = 5;
-
-            //---- FRONT
-            //up
-            if (segment.faceDirection == FaceDirection.Front && (cy - py < 0) && cx == nx) opt = 1;
-            if (segment.faceDirection == FaceDirection.Front && (cy - py < 0) && cx > nx) opt = 3;
-            if (segment.faceDirection == FaceDirection.Front && (cy - py < 0) && cx < nx) opt = 5;
-            //down
-            if (segment.faceDirection == FaceDirection.Front && (cy - py > 0) && cx == nx) opt = 1;
-            if (segment.faceDirection == FaceDirection.Front && (cy - py > 0) && cx > nx) opt = 4;
-            if (segment.faceDirection == FaceDirection.Front && (cy - py > 0) && cx < nx) opt = 6;
-            //right
-            if (segment.faceDirection == FaceDirection.Front && (cx - px < 0) && cy == ny) opt = 1;
-            if (segment.faceDirection == FaceDirection.Front && (cx - px < 0) && cy > ny) opt = 6;
-            if (segment.faceDirection == FaceDirection.Front && (cx - px < 0) && cy < ny) opt = 5;
-            //left
-            if (segment.faceDirection == FaceDirection.Front && (cx - px > 0) && cy == ny) opt = 1;
-            if (segment.faceDirection == FaceDirection.Front && (cx - px > 0) && cy > ny) opt = 4;
-            if (segment.faceDirection == FaceDirection.Front && (cx - px > 0) && cy < ny) opt = 3;
+            if (segment.faceDirection == FaceDirection.Front && (cx - ax > 0) && cy == by) opt = 1;
+            if (segment.faceDirection == FaceDirection.Front && (cx - ax > 0) && cy > by) opt = 4;
+            if (segment.faceDirection == FaceDirection.Front && (cx - ax > 0) && cy < by) opt = 3;
 
 
             //---- RIGHT
             //up
-            if (segment.faceDirection == FaceDirection.Right && (cy - py < 0) && cz == nz) opt = 1;
-            if (segment.faceDirection == FaceDirection.Right && (cy - py < 0) && cz > nz) opt = 5;
-            if (segment.faceDirection == FaceDirection.Right && (cy - py < 0) && cz < nz) opt = 3;
+            if (segment.faceDirection == FaceDirection.Right && (cy - ay < 0) && cz == bz) opt = 1;
+            if (segment.faceDirection == FaceDirection.Right && (cy - ay < 0) && cz > bz) opt = 5;
+            if (segment.faceDirection == FaceDirection.Right && (cy - ay < 0) && cz < bz) opt = 3;
             //down
-            if (segment.faceDirection == FaceDirection.Right && (cy - py > 0) && cz == nz) opt = 1;
-            if (segment.faceDirection == FaceDirection.Right && (cy - py > 0) && cz > nz) opt = 6;
-            if (segment.faceDirection == FaceDirection.Right && (cy - py > 0) && cz < nz) opt = 4;
+            if (segment.faceDirection == FaceDirection.Right && (cy - ay > 0) && cz == bz) opt = 1;
+            if (segment.faceDirection == FaceDirection.Right && (cy - ay > 0) && cz > bz) opt = 6;
+            if (segment.faceDirection == FaceDirection.Right && (cy - ay > 0) && cz < bz) opt = 4;
             //front
-            if (segment.faceDirection == FaceDirection.Right && (cz - pz < 0) && cy == ny) opt = 1;
-            if (segment.faceDirection == FaceDirection.Right && (cz - pz < 0) && cy > ny) opt = 4;
-            if (segment.faceDirection == FaceDirection.Right && (cz - pz < 0) && cy < ny) opt = 3;
+            if (segment.faceDirection == FaceDirection.Right && (cz - az < 0) && cy == by) opt = 1;
+            if (segment.faceDirection == FaceDirection.Right && (cz - az < 0) && cy > by) opt = 4;
+            if (segment.faceDirection == FaceDirection.Right && (cz - az < 0) && cy < by) opt = 3;
             //back
-            if (segment.faceDirection == FaceDirection.Right && (cz - pz > 0) && cy == ny) opt = 1;
-            if (segment.faceDirection == FaceDirection.Right && (cz - pz > 0) && cy > ny) opt = 6;
-            if (segment.faceDirection == FaceDirection.Right && (cz - pz > 0) && cy < ny) opt = 5;
+            if (segment.faceDirection == FaceDirection.Right && (cz - az > 0) && cy == by) opt = 1;
+            if (segment.faceDirection == FaceDirection.Right && (cz - az > 0) && cy > by) opt = 6;
+            if (segment.faceDirection == FaceDirection.Right && (cz - az > 0) && cy < by) opt = 5;
 
             //---- BACK
-            //right
-            if (segment.faceDirection == FaceDirection.Back && (cx - px < 0) && cy == ny) opt = 1;
-            if (segment.faceDirection == FaceDirection.Back && (cx - px < 0) && cy > ny) opt = 5;
-            if (segment.faceDirection == FaceDirection.Back && (cx - px < 0) && cy < ny) opt = 6;
-            //left
-            if (segment.faceDirection == FaceDirection.Back && (cx - px > 0) && cy == ny) opt = 1;
-            if (segment.faceDirection == FaceDirection.Back && (cx - px > 0) && cy > ny) opt = 3;
-            if (segment.faceDirection == FaceDirection.Back && (cx - px > 0) && cy < ny) opt = 4;
-            //down
-            if (segment.faceDirection == FaceDirection.Back && (cy - py > 0) && cx == nx) opt = 1;
-            if (segment.faceDirection == FaceDirection.Back && (cy - py > 0) && cx > nx) opt = 3;
-            if (segment.faceDirection == FaceDirection.Back && (cy - py > 0) && cx < nx) opt = 5;
             //up
-            if (segment.faceDirection == FaceDirection.Back && (cy - py < 0) && cx == nx) opt = 1;
-            if (segment.faceDirection == FaceDirection.Back && (cy - py < 0) && cx > nx) opt = 4;
-            if (segment.faceDirection == FaceDirection.Back && (cy - py < 0) && cx < nx) opt = 6;
-
+            if (segment.faceDirection == FaceDirection.Back && (cy - ay < 0) && cx == bx) opt = 1;
+            if (segment.faceDirection == FaceDirection.Back && (cy - ay < 0) && cx > bx) opt = 4;
+            if (segment.faceDirection == FaceDirection.Back && (cy - ay < 0) && cx < bx) opt = 6;
+            //down
+            if (segment.faceDirection == FaceDirection.Back && (cy - ay > 0) && cx == bx) opt = 1;
+            if (segment.faceDirection == FaceDirection.Back && (cy - ay > 0) && cx > bx) opt = 3;
+            if (segment.faceDirection == FaceDirection.Back && (cy - ay > 0) && cx < bx) opt = 5;
+            //right
+            if (segment.faceDirection == FaceDirection.Back && (cx - ax < 0) && cy == by) opt = 1;
+            if (segment.faceDirection == FaceDirection.Back && (cx - ax < 0) && cy > by) opt = 5;
+            if (segment.faceDirection == FaceDirection.Back && (cx - ax < 0) && cy < by) opt = 6;
+            //left
+            if (segment.faceDirection == FaceDirection.Back && (cx - ax > 0) && cy == by) opt = 1;
+            if (segment.faceDirection == FaceDirection.Back && (cx - ax > 0) && cy > by) opt = 3;
+            if (segment.faceDirection == FaceDirection.Back && (cx - ax > 0) && cy < by) opt = 4;
+        
 
             //--- LEFT
-            //back
-            if (segment.faceDirection == FaceDirection.Left && (cz - pz > 0) && cy == ny) opt = 1;
-            if (segment.faceDirection == FaceDirection.Left && (cz - pz > 0) && cy > ny) opt = 4;
-            if (segment.faceDirection == FaceDirection.Left && (cz - pz > 0) && cy < ny) opt = 3;
-            //front
-            if (segment.faceDirection == FaceDirection.Left && (cz - pz < 0) && cy == ny) opt = 1;
-            if (segment.faceDirection == FaceDirection.Left && (cz - pz < 0) && cy > ny) opt = 6;
-            if (segment.faceDirection == FaceDirection.Left && (cz - pz < 0) && cy < ny) opt = 5;
-            //down
-            if (segment.faceDirection == FaceDirection.Left && (cy - py > 0) && cz == nz) opt = 1;
-            if (segment.faceDirection == FaceDirection.Left && (cy - py > 0) && cz > nz) opt = 4;
-            if (segment.faceDirection == FaceDirection.Left && (cy - py > 0) && cz < nz) opt = 6;
             //up
-            if (segment.faceDirection == FaceDirection.Left && (cy - py < 0) && cz == nz) opt = 1;
-            if (segment.faceDirection == FaceDirection.Left && (cy - py < 0) && cz > nz) opt = 3;
-            if (segment.faceDirection == FaceDirection.Left && (cy - py < 0) && cz < nz) opt = 5;
+            if (segment.faceDirection == FaceDirection.Left && (cy - ay < 0) && cz == bz) opt = 1;
+            if (segment.faceDirection == FaceDirection.Left && (cy - ay < 0) && cz > bz) opt = 3;
+            if (segment.faceDirection == FaceDirection.Left && (cy - ay < 0) && cz < bz) opt = 5;
+            //down
+            if (segment.faceDirection == FaceDirection.Left && (cy - ay > 0) && cz == bz) opt = 1;
+            if (segment.faceDirection == FaceDirection.Left && (cy - ay > 0) && cz > bz) opt = 4;
+            if (segment.faceDirection == FaceDirection.Left && (cy - ay > 0) && cz < bz) opt = 6;
+            //front
+            if (segment.faceDirection == FaceDirection.Left && (cz - az < 0) && cy == by) opt = 1;
+            if (segment.faceDirection == FaceDirection.Left && (cz - az < 0) && cy > by) opt = 6;
+            if (segment.faceDirection == FaceDirection.Left && (cz - az < 0) && cy < by) opt = 5;
+            //back
+            if (segment.faceDirection == FaceDirection.Left && (cz - az > 0) && cy == by) opt = 1;
+            if (segment.faceDirection == FaceDirection.Left && (cz - az > 0) && cy > by) opt = 4;
+            if (segment.faceDirection == FaceDirection.Left && (cz - az > 0) && cy < by) opt = 3;
+            
+         
         }
        // opt = opt+10
-       /*
-
-      
-
-
-        if (segment.type == Type.FromSide || segment.type == Type.ToSide) {
-            if (i == arrow.segments.length - 1) {//head
-                nx = cx;
-                ny = cy;
-                nz = cz;
-            }
-        }
-       
-        //straight from side
-        if (segment.type == Type.FromSide && i < arrow.segments.length - 1) {
-
-
-            let nextFaceDirection = arrow.segments[i + 1].faceDirection;
-
-            if ((cx == px) && (cx > nx) && (cy > py) && (cy < ny) && (cz == pz) && (cz == nz)) opt = 1;
-            if ((cx < px) && (cx > nx) && (cy == py) && (cy == ny) && (cz == pz) && (cz > nz)) opt = 1;
-            if ((cx == px) && (cx == nx) && (cy > py) && (cy < ny) && (cz == pz) && (cz > nz)) opt = 1;
-            if ((cx == px) && (cx < nx) && (cy == py) && (cy == ny) && (cz > pz) && (cz < nz)) opt = 1;
-            if ((cx == px) && (cx > nx) && (cy == py) && (cy == ny) && (cz > pz) && (cz < nz)) opt = 1;
-            if ((cx > px) && (cx < nx) && (cy == py) && (cy > ny) && (cz == pz) && (cz == nz)) opt = 1;
-            if ((cx == px) && (cx > nx) && (cy < py) && (cy < ny) && (cz == pz) && (cz == nz)) opt = 1;
-            if ((cx == px) && (cx == nx) && (cy == py) && (cy > ny) && (cz > pz) && (cz < nz)) opt = 1;
-            if ((cx == px) && (cx == nx) && (cy < py) && (cy > ny) && (cz == pz) && (cz > nz)) opt = 1;
-            if ((cx == px) && (cx == nx) && (cy == py) && (cy < ny) && (cz > pz) && (cz < nz)) opt = 1;
-            if ((cx == px) && (cx > nx) && (cy == py) && (cy == ny) && (cz < pz) && (cz < nz)) opt = 1;
-            if ((cx > px) && (cx < nx) && (cy == py) && (cy == ny) && (cz == pz) && (cz > nz)) opt = 1;
-            if ((cx == px) && (cx == nx) && (cy == py) && (cy > ny) && (cz < pz) && (cz < nz)) opt = 1;
-            if ((cx == px) && (cx > nx) && (cy > py) && (cy < ny) && (cz == pz) && (cz > nz)) opt = 1;
-            if ((cx == px) && (cx > nx) && (cy > py) && (cy < ny) && (cz == pz) && (cz < nz)) opt = 1;
-            if ((cx == px) && (cx < nx) && (cy == py) && (cy > ny) && (cz > pz) && (cz < nz)) opt = 1;
-            if ((cx == px) && (cx < nx) && (cy < py) && (cy > ny) && (cz == pz) && (cz > nz)) opt = 1;
-            if ((cx < px) && (cx > nx) && (cy == py) && (cy < ny) && (cz == pz) && (cz == nz)) opt = 1;
-            if ((cx > px) && (cx < nx) && (cy == py) && (cy > ny) && (cz == pz) && (cz > nz)) opt = 1;
-            if ((cx < px) && (cx > nx) && (cy == py) && (cy == ny) && (cz == pz) && (cz < nz)) opt = 1;
-            if ((cx < px) && (cx > nx) && (cy == py) && (cy > ny) && (cz == pz) && (cz == nz)) opt = 1;
-            if ((cx > px) && (cx < nx) && (cy == py) && (cy == ny) && (cz == pz) && (cz < nz)) opt = 1;
-            if ((cx < px) && (cx > nx) && (cy == py) && (cy > ny) && (cz == pz) && (cz == nz)) opt = 1;
-            if ((cx == px) && (cx == nx) && (cy > py) && (cy < ny) && (cz == pz) && (cz < nz)) opt = 1;
-            if ((cx == px) && (cx < nx) && (cy == py) && (cy == ny) && (cz < pz) && (cz > nz)) opt = 1;
-            if ((cx == px) && (cx == nx) && (cy == py) && (cy < ny) && (cz < pz) && (cz > nz)) opt = 1;
-            if ((cx > px) && (cx < nx) && (cy == py) && (cy < ny) && (cz == pz) && (cz == nz)) opt = 1;
-            if ((cx == px) && (cx < nx) && (cy < py) && (cy > ny) && (cz == pz) && (cz == nz)) opt = 1;
-            if ((cx == px) && (cx > nx) && (cy < py) && (cy > ny) && (cz == pz) && (cz == nz)) opt = 1;
-            if ((cx == px) && (cx == nx) && (cy == py) && (cy > ny) && (cz < pz) && (cz > nz)) opt = 1;
-            if ((cx == px) && (cx < nx) && (cy > py) && (cy < ny) && (cz == pz) && (cz == nz)) opt = 1;
-            if ((cx == px) && (cx > nx) && (cy == py) && (cy == ny) && (cz < pz) && (cz > nz)) opt = 1;
-            if ((cx == px) && (cx == nx) && (cy < py) && (cy > ny) && (cz == pz) && (cz < nz)) opt = 1;
-            if ((cx < px) && (cx > nx) && (cy == py) && (cy < ny) && (cz == pz) && (cz > nz)) opt = 1;
-            if ((cx == px) && (cx == nx) && (cy < py) && (cy > ny) && (cz < pz) && (cz > nz)) opt = 1;
-            if ((cx == px) && (cx > nx) && (cy < py) && (cy > ny) && (cz == pz) && (cz < nz)) opt = 1;
-            if ((cx == px) && (cx > nx) && (cy == py) && (cy > ny) && (cz > pz) && (cz < nz)) opt = 1;
-            if ((cx == px) && (cx < nx) && (cy > py) && (cy < ny) && (cz == pz) && (cz > nz)) opt = 1;
-            if ((cx == px) && (cx < nx) && (cy == py) && (cy > ny) && (cz < pz) && (cz > nz)) opt = 1;
-            if ((nextFaceDirection == FaceDirection.Left) &&(cx < px) && (cx > nx) && (cy == py) && (cy > ny) && (cz == pz) && (cz < nz)) opt = 1;
-            
-            
-        }
-
-        //straight  to side
-        if (segment.type == Type.ToSide) {
-
-            if ((cx > px) && (cx < nx) && (cy < py) && (cy == ny) && (cz == pz) && (cz == nz)) opt = 1;
-            if ((cx == px) && (cx == nx) && (cy > py) && (cy == ny) && (cz > pz) && (cz < nz)) opt = 1;
-            if ((cx > px) && (cx == nx) && (cy == py) && (cy == ny) && (cz > pz) && (cz < nz)) opt = 1;
-            if ((cx > px) && (cx == nx) && (cy > py) && (cy < ny) && (cz == pz) && (cz == nz)) opt = 1;
-            if ((cx == px) && (cx == nx) && (cy < py) && (cy > ny) && (cz < pz) && (cz == nz)) opt = 1;
-            if ((cx < px) && (cx > nx) && (cy == py) && (cy == ny) && (cz < pz) && (cz == nz)) opt = 1;
-            if ((cx > px) && (cx < nx) && (cy > py) && (cy == ny) && (cz == pz) && (cz == nz)) opt = 1;
-            if ((cx < px) && (cx == nx) && (cy == py) && (cy == ny) && (cz < pz) && (cz > nz)) opt = 1;
-            if ((cx > px) && (cx < nx) && (cy == py) && (cy == ny) && (cz > pz) && (cz == nz)) opt = 1;
-            if ((cx < px) && (cx > nx) && (cy > py) && (cy == ny) && (cz == pz) && (cz == nz)) opt = 1;
-            if ((cx == px) && (cx == nx) && (cy > py) && (cy == ny) && (cz < pz) && (cz > nz)) opt = 1;
-            if ((cx > px) && (cx == nx) && (cy < py) && (cy > ny) && (cz == pz) && (cz == nz)) opt = 1;
-            if ((cx < px) && (cx == nx) && (cy < py) && (cy > ny) && (cz == pz) && (cz == nz)) opt = 1;
-            if ((cx > px) && (cx == nx) && (cy < py) && (cy < ny) && (cz == pz) && (cz == nz)) opt = 1;
-            if ((cx < px) && (cx > nx) && (cy < py) && (cy == ny) && (cz == pz) && (cz == nz)) opt = 1;
-            if ((cx == px) && (cx == nx) && (cy < py) && (cy > ny) && (cz > pz) && (cz == nz)) opt = 1;
-            if ((cx == px) && (cx == nx) && (cy < py) && (cy == ny) && (cz < pz) && (cz > nz)) opt = 1;
-            if ((cx == px) && (cx == nx) && (cy > py) && (cy < ny) && (cz > pz) && (cz == nz)) opt = 1;
-            if ((cx < px) && (cx > nx) && (cy == py) && (cy == ny) && (cz > pz) && (cz == nz)) opt = 1;
-            if ((cx > px) && (cx == nx) && (cy == py) && (cy == ny) && (cz < pz) && (cz > nz)) opt = 1;
-            if ((cx > px) && (cx == nx) && (cy == py) && (cy == ny) && (cz < pz) && (cz < nz)) opt = 1;
-            if ((cx < px) && (cx > nx) && (cy > py) && (cy == ny) && (cz < pz) && (cz == nz)) opt = 1;
-            if ((cx > px) && (cx == nx) && (cy < py) && (cy > ny) && (cz > pz) && (cz == nz)) opt = 1;
-            if ((cx > px) && (cx < nx) && (cy < py) && (cy == ny) && (cz < pz) && (cz == nz)) opt = 1;
-            if ((cx < px) && (cx == nx) && (cy > py) && (cy < ny) && (cz == pz) && (cz == nz)) opt = 1;
-            if ((cx > px) && (cx < nx) && (cy == py) && (cy == ny) && (cz < pz) && (cz == nz)) opt = 1;
-            if ((cx < px) && (cx < nx) && (cy == py) && (cy == ny) && (cz > pz) && (cz == nz)) opt = 1;
-            if ((cx == px) && (cx == nx) && (cy > py) && (cy < ny) && (cz < pz) && (cz == nz)) opt = 1;
-            if ((cx == px) && (cx == nx) && (cy < py) && (cy == ny) && (cz > pz) && (cz < nz)) opt = 1;
-            if ((cx == px) && (cx == nx) && (cy < py) && (cy < ny) && (cz > pz) && (cz == nz)) opt = 1;
-            if ((cx < px) && (cx == nx) && (cy < py) && (cy == ny) && (cz > pz) && (cz < nz)) opt = 1;
-            if ((cx == px) && (cx == nx) && (cy > py) && (cy == ny) && (cz < pz) && (cz < nz)) opt = 1;
-            if ((cx > px) && (cx == nx) && (cy > py) && (cy == ny) && (cz < pz) && (cz > nz)) opt = 1;
-            if ((cx < px) && (cx == nx) && (cy == py) && (cy == ny) && (cz > pz) && (cz < nz)) opt = 1;
-            if ((cx == px) && (cx == nx) && (cy > py) && (cy < ny) && (cz > pz) && (cz < nz)) opt = 1;
-            if ((cx > px) && (cx < nx) && (cy > py) && (cy == ny) && (cz < pz) && (cz == nz)) opt = 1;
-            if ((cx < px) && (cx == nx) && (cy < py) && (cy > ny) && (cz > pz) && (cz == nz)) opt = 1;
-            if ((cx < px) && (cx == nx) && (cy > py) && (cy == ny) && (cz > pz) && (cz < nz)) opt = 1;
-        }
-        
-        //angle from side
-        if (segment.type == Type.FromSide && i < arrow.segments.length - 1) {
-
-            let nextFaceDirection = arrow.segments[i + 1].faceDirection;
-           // console.log("From " + nextFaceDirection.description);
-            
-
-            if (segment.faceDirection == FaceDirection.Right) {
-                if ((cx == px) && (cx - nx < 0) && (cy - py < 0) && (cy == ny) && (cz == pz) && (cz - nz > 0)) opt = 5;
-                if ((cx - px > 0) && (cx - nx > 0) && (cy - py < 0) && (cy == ny) && (cz == pz) && (cz - nz > 0)) opt = 5;
-                if ((cx == px) && (cx - nx > 0) && (cy == py) && (cy - ny < 0) && (cz - pz > 0) && (cz == nz)) opt = 5;
-                if ((cx == px) && (cx - nx > 0) && (cy - py < 0) && (cy == ny) && (cz == pz) && (cz - nz > 0)) opt = 5;
-
-                if ((cx == px) && (cx - nx > 0) && (cy == py) && (cy - ny > 0) && (cz - pz < 0) && (cz == nz)) opt = 4;
-            
-                if ((cx == px) && (cx - nx > 0) && (cy - py < 0) && (cy == ny) && (cz == pz) && (cz - nz < 0)) opt = 3;
-                if ((cx - px > 0) && (cx - nx > 0) && (cy == py) && (cy - ny > 0) && (cz - pz > 0) && (cz == nz)) opt = 6;
-                if ((cx == px) && (cx - nx > 0) && (cy == py) && (cy - ny < 0) && (cz - pz < 0) && (cz == nz)) opt = 3;
-                if ((cx == px) && (cx - nx > 0) && (cy - py > 0) && (cy == ny) && (cz == pz) && (cz - nz < 0)) opt = 4;
-                if ((cx == px) && (cx - nx < 0) && (cy == py) && (cy - ny > 0) && (cz - pz < 0) && (cz == nz)) opt = 4;
-                if ((cx == px) && (cx - nx > 0) && (cy == py) && (cy - ny > 0) && (cz - pz > 0) && (cz == nz)) opt = 6;
-                if ((cx == px) && (cx - nx > 0) && (cy - py > 0) && (cy == ny) && (cz == pz) && (cz - nz > 0)) opt = 6;
-                if ((cx - px > 0) && (cx - nx > 0) && (cy - py > 0) && (cy == ny) && (cz == pz) && (cz - nz < 0)) opt = 4;
-                if ((cx == px) && (cx - nx > 0) && (cy == py) && (cy - ny < 0) && (cz - pz < 0) && (cz - nz > 0)) opt = 3;
-            }
-            if (segment.faceDirection == FaceDirection.Front) {
-                if ((cx == px) && (cx - nx < 0) && (cy - py < 0) && (cy == ny) && (cz == pz) && (cz - nz > 0)) opt = 5;
-                if ((cx - px < 0) && (cx == nx) && (cy == py) && (cy - ny < 0) && (cz == pz) && (cz - nz > 0)) opt = 5;
-                if ((cx - px > 0) && (cx == nx) && (cy == py) && (cy - ny < 0) && (cz - pz > 0) && (cz - nz > 0)) opt = 3;
-                if ((cx == px) && (cx - nx < 0) && (cy - py > 0) && (cy == ny) && (cz == pz) && (cz - nz > 0)) opt = 6;
-                if ((cx - px < 0) && (cx == nx) && (cy == py) && (cy - ny > 0) && (cz == pz) && (cz - nz > 0)) opt = 6;
-                if ((cx - px > 0) && (cx == nx) && (cy == py) && (cy - ny < 0) && (cz == pz) && (cz - nz > 0)) opt = 3;
-                if ((cx == px) && (cx - nx > 0) && (cy - py < 0) && (cy == ny) && (cz == pz) && (cz - nz > 0)) opt = 3;
-                if ((cx == px) && (cx - nx < 0) && (cy - py < 0) && (cy == ny) && (cz - pz > 0) && (cz - nz > 0)) opt = 5;
-                if ((cx - px > 0) && (cx == nx) && (cy == py) && (cy - ny > 0) && (cz == pz) && (cz - nz > 0)) opt = 4;
-                if ((cx - px < 0) && (cx == nx) && (cy == py) && (cy - ny < 0) && (cz - pz > 0) && (cz - nz > 0)) opt = 5;
-                if ((cx == px) && (cx - nx > 0) && (cy - py > 0) && (cy == ny) && (cz == pz) && (cz - nz > 0)) opt = 4;
-                if ((cx - px > 0) && (cx - nx < 0) && (cy == py) && (cy - ny < 0) && (cz == pz) && (cz - nz > 0)) opt = 3;
-            }
-            if (segment.faceDirection == FaceDirection.Up) {
-                if ((cx - px > 0) && (cx == nx) && (cy == py) && (cy - ny < 0) && (cz == pz) && (cz - nz < 0)) opt = 5;
-                if ((cx == px) && (cx - nx < 0) && (cy == py) && (cy - ny > 0) && (cz - pz > 0) && (cz == nz)) opt = 4;
-                if ((cx == px) && (cx - nx < 0) && (cy == py) && (cy - ny > 0) && (cz - pz < 0) && (cz == nz)) opt = 3;
-                if ((cx - px < 0) && (cx == nx) && (cy == py) && (cy - ny > 0) && (cz == pz) && (cz - nz < 0)) opt = 3;
-                if ((cx == px) && (cx - nx > 0) && (cy == py) && (cy - ny > 0) && (cz - pz > 0) && (cz == nz)) opt = 6;
-                if ((cx == px) && (cx - nx > 0) && (cy == py) && (cy - ny > 0) && (cz - pz < 0) && (cz == nz)) opt = 5;
-                if ((cx - px > 0) && (cx == nx) && (cy == py) && (cy - ny > 0) && (cz == pz) && (cz - nz < 0)) opt = 5;
-                if ((cx - px > 0) && (cx == nx) && (cy == py) && (cy - ny > 0) && (cz == pz) && (cz - nz > 0)) opt = 6;
-                if ((cx == px) && (cx - nx < 0) && (cy - py > 0) && (cy - ny > 0) && (cz - pz > 0) && (cz == nz)) opt = 4;
-                if ((cx - px > 0) && (cx == nx) && (cy - py > 0) && (cy - ny > 0) && (cz == pz) && (cz - nz > 0)) opt = 6;
-                if ((cx - px < 0) && (cx == nx) && (cy == py) && (cy - ny > 0) && (cz == pz) && (cz - nz > 0)) opt = 4;
-                if ((cx == px) && (cx - nx < 0) && (cy == py) && (cy - ny > 0) && (cz - pz < 0) && (cz - nz < 0)) opt = 3;
-                if ((nextFaceDirection == FaceDirection.Front) && (cx - px < 0) && (cx - nx > 0) && (cy == py) && (cy - ny > 0) && (cz == pz) && (cz - nz < 0)) opt = 3;
-                //if ((cx == px) && (cx - nx > 0) && (cy == py) && (cy - ny > 0) && (cz - pz > 0) && (cz - nz < 0)) opt = 16;
-                
-            }
-            if (segment.faceDirection == FaceDirection.Back) {
-                if ((cx - px > 0) && (cx == nx) && (cy == py) && (cy - ny < 0) && (cz == pz) && (cz - nz < 0)) opt = 4;
-                if ((cx - px < 0) && (cx == nx) && (cy == py) && (cy - ny > 0) && (cz == pz) && (cz - nz > 0)) opt = 5;
-                if ((cx == px) && (cx - nx < 0) && (cy - py < 0) && (cy == ny) && (cz == pz) && (cz - nz > 0)) opt = 6;
-                if ((cx == px) && (cx - nx < 0) && (cy - py > 0) && (cy == ny) && (cz == pz) && (cz - nz < 0)) opt = 5;
-                if ((cx == px) && (cx - nx > 0) && (cy - py < 0) && (cy == ny) && (cz == pz) && (cz - nz < 0)) opt = 4;
-                if ((cx == px) && (cx - nx > 0) && (cy - py > 0) && (cy == ny) && (cz == pz) && (cz - nz < 0)) opt = 3;
-                if ((cx - px > 0) && (cx == nx) && (cy == py) && (cy - ny > 0) && (cz == pz) && (cz - nz < 0)) opt = 3;
-                if ((cx == px) && (cx - nx < 0) && (cy - py < 0) && (cy == ny) && (cz == pz) && (cz - nz < 0)) opt = 6;
-                if ((cx == px) && (cx - nx > 0) && (cy - py < 0) && (cy == ny) && (cz - pz < 0) && (cz - nz < 0)) opt = 4;
-                if ((cx - px < 0) && (cx == nx) && (cy == py) && (cy - ny > 0) && (cz == pz) && (cz - nz < 0)) opt = 5;
-                if ((cx - px < 0) && (cx - nx > 0) && (cy == py) && (cy - ny < 0) && (cz == pz) && (cz - nz < 0)) opt = 6;
-                if ((cx - px < 0) && (cx == nx) && (cy == py) && (cy - ny < 0) && (cz == pz) && (cz - nz < 0)) opt = 6;
-               // if ((nextFaceDirection = FaceDirection.Front)&&(cx == px) && (cx - nx > 0) && (cy == py) && (cy - ny > 0) && (cz - pz > 0) && (cz - nz < 0)) opt = 13;
-            }
-            if (segment.faceDirection == FaceDirection.Down) {
-                if ((cx - px < 0) && (cx == nx) && (cy == py) && (cy - ny < 0) && (cz == pz) && (cz - nz < 0)) opt = 5;
-                if ((cx - px < 0) && (cx == nx) && (cy == py) && (cy - ny > 0) && (cz == pz) && (cz - nz > 0)) opt = 6;
-                if ((cx == px) && (cx - nx < 0) && (cy == py) && (cy - ny > 0) && (cz - pz > 0) && (cz == nz)) opt = 6;
-                if ((cx == px) && (cx - nx > 0) && (cy == py) && (cy - ny < 0) && (cz - pz < 0) && (cz == nz)) opt = 3;
-                if ((cx - px > 0) && (cx == nx) && (cy == py) && (cy - ny < 0) && (cz == pz) && (cz - nz < 0)) opt = 3;
-                if ((cx == px) && (cx - nx < 0) && (cy == py) && (cy - ny < 0) && (cz - pz > 0) && (cz == nz)) opt = 6;
-                if ((cx - px > 0) && (cx == nx) && (cy == py) && (cy - ny < 0) && (cz == pz) && (cz - nz > 0)) opt = 4;
-                if ((cx == px) && (cx - nx > 0) && (cy == py) && (cy - ny < 0) && (cz - pz > 0) && (cz == nz)) opt = 4;
-                if ((cx == px) && (cx - nx < 0) && (cy == py) && (cy - ny > 0) && (cz - pz < 0) && (cz == nz)) opt = 5;
-                if ((cx == px) && (cx - nx < 0) && (cy == py) && (cy - ny < 0) && (cz - pz < 0) && (cz == nz)) opt = 5;
-                if ((cx == px) && (cx - nx > 0) && (cy - py < 0) && (cy - ny < 0) && (cz - pz > 0) && (cz == nz)) opt = 4;
-                if ((cx - px < 0) && (cx == nx) && (cy == py) && (cy - ny < 0) && (cz == pz) && (cz - nz > 0)) opt = 6;
-                if ((cx == px) && (cx - nx < 0) && (cy - py < 0) && (cy - ny < 0) && (cz - pz < 0) && (cz == nz)) opt = 5;
-            }
-            if (segment.faceDirection == FaceDirection.Left) {
-                if ((cx == px) && (cx - nx < 0) && (cy == py) && (cy - ny > 0) && (cz - pz > 0) && (cz == nz)) opt = 4;
-                if ((cx == px) && (cx - nx < 0) && (cy - py < 0) && (cy == ny) && (cz == pz) && (cz - nz > 0)) opt = 3;
-                if ((cx == px) && (cx - nx < 0) && (cy == py) && (cy - ny > 0) && (cz - pz < 0) && (cz == nz)) opt = 6;
-                if ((cx == px) && (cx - nx > 0) && (cy == py) && (cy - ny > 0) && (cz - pz > 0) && (cz == nz)) opt = 4;
-                if ((cx == px) && (cx - nx < 0) && (cy - py < 0) && (cy == ny) && (cz == pz) && (cz - nz < 0)) opt = 5;
-                if ((cx == px) && (cx - nx < 0) && (cy - py > 0) && (cy == ny) && (cz == pz) && (cz - nz < 0)) opt = 6;
-                if ((cx - px < 0) && (cx - nx < 0) && (cy - py > 0) && (cy == ny) && (cz == pz) && (cz - nz > 0)) opt = 4;
-                if ((cx == px) && (cx - nx < 0) && (cy - py > 0) && (cy == ny) && (cz == pz) && (cz - nz > 0)) opt = 4;
-                if ((cx - px < 0) && (cx - nx < 0) && (cy == py) && (cy - ny > 0) && (cz - pz < 0) && (cz == nz)) opt = 6;
-                if ((cx == px) && (cx - nx > 0) && (cy == py) && (cy - ny < 0) && (cz - pz < 0) && (cz == nz)) opt = 5;
-                if ((cx == px) && (cx - nx < 0) && (cy == py) && (cy - ny < 0) && (cz - pz > 0) && (cz == nz)) opt = 3;
-                if ((cx == px) && (cx - nx < 0) && (cy == py) && (cy - ny < 0) && (cz - pz < 0) && (cz == nz)) opt = 5;
-            }
-
-     
-            
-        }
-        //angle to side
-        if (segment.type == Type.ToSide) {
-            if (segment.faceDirection == FaceDirection.Right) {
-                if ((cx - px > 0) && (cx == nx) && (cy - py > 0) && (cy == ny) && (cz == pz) && (cz - nz > 0)) opt = 6;
-                if ((cx - px > 0) && (cx == nx) && (cy == py) && (cy - ny < 0) && (cz - pz > 0) && (cz == nz)) opt = 5;
-                if ((cx - px > 0) && (cx == nx) && (cy - py < 0) && (cy == ny) && (cz == pz) && (cz - nz > 0)) opt = 5;
-                if ((cx - px > 0) && (cx == nx) && (cy - py > 0) && (cy == ny) && (cz == pz) && (cz - nz < 0)) opt = 4;
-                if ((cx - px > 0) && (cx == nx) && (cy == py) && (cy - ny > 0) && (cz - pz > 0) && (cz == nz)) opt = 6;
-                if ((cx - px > 0) && (cx == nx) && (cy == py) && (cy - ny < 0) && (cz - pz < 0) && (cz == nz)) opt = 3;
-                if ((cx - px > 0) && (cx == nx) && (cy == py) && (cy - ny > 0) && (cz - pz < 0) && (cz == nz)) opt = 4;
-                if ((cx - px > 0) && (cx == nx) && (cy - py < 0) && (cy == ny) && (cz == pz) && (cz - nz < 0)) opt = 3;
-                if ((cx - px < 0) && (cx == nx) && (cy - py > 0) && (cy == ny) && (cz == pz) && (cz - nz < 0)) opt = 4;
-            
-            }
-            if (segment.faceDirection == FaceDirection.Front) {
-                if ((cx == px) && (cx - nx > 0) && (cy - py > 0) && (cy == ny) && (cz - pz > 0) && (cz == nz)) opt = 4;
-                if ((cx == px) && (cx - nx < 0) && (cy - py < 0) && (cy == ny) && (cz - pz < 0) && (cz == nz)) opt = 5;
-                if ((cx == px) && (cx - nx < 0) && (cy - py < 0) && (cy == ny) && (cz - pz > 0) && (cz == nz)) opt = 5;
-                if ((cx == px) && (cx - nx < 0) && (cy - py > 0) && (cy == ny) && (cz - pz > 0) && (cz == nz)) opt = 6;
-                if ((cx - px > 0) && (cx == nx) && (cy == py) && (cy - ny < 0) && (cz - pz > 0) && (cz == nz)) opt = 3;
-                if ((cx == px) && (cx - nx > 0) && (cy - py < 0) && (cy == ny) && (cz - pz > 0) && (cz == nz)) opt = 3;
-                if ((cx - px < 0) && (cx == nx) && (cy == py) && (cy - ny > 0) && (cz - pz > 0) && (cz == nz)) opt = 6;
-                if ((cx - px > 0) && (cx == nx) && (cy == py) && (cy - ny > 0) && (cz - pz > 0) && (cz == nz)) opt = 4;
-                if ((cx - px < 0) && (cx == nx) && (cy == py) && (cy - ny < 0) && (cz - pz > 0) && (cz == nz)) opt = 5;
-                if ((cx - px < 0) && (cx - nx > 0) && (cy - py < 0) && (cy == ny) && (cz - pz > 0) && (cz == nz)) opt = 3;
-                if ((cx - px < 0) && (cx - nx < 0) && (cy - py < 0) && (cy == ny) && (cz - pz > 0) && (cz == nz)) opt = 5;
-            }
-            if (segment.faceDirection == FaceDirection.Up) {
-                if ((cx - px < 0) && (cx == nx) && (cy - py > 0) && (cy == ny) && (cz == pz) && (cz - nz < 0)) opt = 3;
-                if ((cx == px) && (cx - nx > 0) && (cy - py > 0) && (cy == ny) && (cz - pz > 0) && (cz == nz)) opt = 6;
-                if ((cx - px < 0) && (cx == nx) && (cy - py < 0) && (cy == ny) && (cz == pz) && (cz - nz > 0)) opt = 4;
-                if ((cx == px) && (cx - nx < 0) && (cy - py > 0) && (cy == ny) && (cz - pz > 0) && (cz == nz)) opt = 4;
-                if ((cx - px < 0) && (cx == nx) && (cy - py > 0) && (cy == ny) && (cz - pz < 0) && (cz - nz > 0)) opt = 4;
-                if ((cx == px) && (cx - nx < 0) && (cy - py > 0) && (cy == ny) && (cz - pz < 0) && (cz == nz)) opt = 3;
-                if ((cx - px > 0) && (cx == nx) && (cy - py > 0) && (cy == ny) && (cz == pz) && (cz - nz > 0)) opt = 6;
-                if ((cx == px) && (cx - nx > 0) && (cy - py > 0) && (cy == ny) && (cz - pz < 0) && (cz == nz)) opt = 5;
-                if ((cx - px > 0) && (cx == nx) && (cy - py > 0) && (cy == ny) && (cz == pz) && (cz - nz < 0)) opt = 5;
-                if ((cx - px < 0) && (cx == nx) && (cy - py > 0) && (cy == ny) && (cz == pz) && (cz - nz > 0)) opt = 4;
-                if ((cx - px > 0) && (cx == nx) && (cy - py > 0) && (cy == ny) && (cz - pz < 0) && (cz - nz < 0)) opt = 5;
-            }
-            if (segment.faceDirection == FaceDirection.Back) {
-                if ((cx - px < 0) && (cx == nx) && (cy == py) && (cy - ny > 0) && (cz - pz < 0) && (cz == nz)) opt = 5;
-                if ((cx == px) && (cx - nx > 0) && (cy - py < 0) && (cy == ny) && (cz - pz < 0) && (cz == nz)) opt = 4;
-                if ((cx - px > 0) && (cx == nx) && (cy == py) && (cy - ny > 0) && (cz - pz < 0) && (cz == nz)) opt = 3;
-                if ((cx == px) && (cx - nx < 0) && (cy - py > 0) && (cy == ny) && (cz - pz < 0) && (cz == nz)) opt = 5;
-                if ((cx == px) && (cx - nx > 0) && (cy - py > 0) && (cy == ny) && (cz - pz < 0) && (cz == nz)) opt = 3;
-                if ((cx - px > 0) && (cx == nx) && (cy == py) && (cy - ny < 0) && (cz - pz < 0) && (cz == nz)) opt = 4;
-                if ((cx == px) && (cx - nx < 0) && (cy - py < 0) && (cy == ny) && (cz - pz < 0) && (cz == nz)) opt = 6;
-                if ((cx == px) && (cx - nx < 0) && (cy - py > 0) && (cy == ny) && (cz - pz < 0) && (cz == nz)) opt = 5;
-                if ((cx - px < 0) && (cx == nx) && (cy == py) && (cy - ny < 0) && (cz - pz < 0) && (cz == nz)) opt = 6;
-                if ((cx - px > 0) && (cx - nx > 0) && (cy - py < 0) && (cy == ny) && (cz - pz < 0) && (cz == nz)) opt = 4;
-
-            }
-            if (segment.faceDirection == FaceDirection.Down) {
-                if ((cx - px > 0) && (cx == nx) && (cy - py < 0) && (cy == ny) && (cz == pz) && (cz - nz > 0)) opt = 4;
-                if ((cx - px < 0) && (cx == nx) && (cy - py < 0) && (cy == ny) && (cz == pz) && (cz - nz < 0)) opt = 5;
-                if ((cx == px) && (cx - nx < 0) && (cy - py < 0) && (cy == ny) && (cz - pz > 0) && (cz == nz)) opt = 6;
-                if ((cx == px) && (cx - nx > 0) && (cy - py < 0) && (cy == ny) && (cz - pz < 0) && (cz == nz)) opt = 3;
-                if ((cx == px) && (cx - nx > 0) && (cy - py < 0) && (cy == ny) && (cz - pz > 0) && (cz == nz)) opt = 4;
-                if ((cx == px) && (cx - nx < 0) && (cy - py < 0) && (cy == ny) && (cz - pz < 0) && (cz == nz)) opt = 5;
-                if ((cx - px < 0) && (cx == nx) && (cy - py > 0) && (cy == ny) && (cz == pz) && (cz - nz < 0)) opt = 5;
-                if ((cx - px < 0) && (cx == nx) && (cy - py > 0) && (cy == ny) && (cz == pz) && (cz - nz > 0)) opt = 6;
-                if ((cx - px > 0) && (cx == nx) && (cy - py < 0) && (cy == ny) && (cz == pz) && (cz - nz < 0)) opt = 3;
-                if ((cx - px < 0) && (cx == nx) && (cy - py < 0) && (cy == ny) && (cz == pz) && (cz - nz > 0)) opt = 6;
-                //if ((cx - px < 0) && (cx == nx) && (cy - py < 0) && (cy == ny) && (cz - pz > 0) && (cz - nz < 0)) opt = 15;
-            }
-            if (segment.faceDirection == FaceDirection.Left) {
-                if ((cx - px < 0) && (cx == nx) && (cy - py > 0) && (cy == ny) && (cz == pz) && (cz - nz > 0)) opt = 4;
-                if ((cx - px > 0) && (cx == nx) && (cy - py < 0) && (cy == ny) && (cz == pz) && (cz - nz > 0)) opt = 3;
-                if ((cx - px < 0) && (cx == nx) && (cy - py < 0) && (cy == ny) && (cz == pz) && (cz - nz < 0)) opt = 5;
-                if ((cx - px < 0) && (cx == nx) && (cy == py) && (cy - ny > 0) && (cz - pz > 0) && (cz == nz)) opt = 4;
-                if ((cx - px < 0) && (cx == nx) && (cy - py > 0) && (cy == ny) && (cz == pz) && (cz - nz < 0)) opt = 6;
-                if ((cx - px < 0) && (cx == nx) && (cy == py) && (cy - ny < 0) && (cz - pz > 0) && (cz == nz)) opt = 3;
-                if ((cx - px < 0) && (cx == nx) && (cy - py < 0) && (cy == ny) && (cz == pz) && (cz - nz > 0)) opt = 3;
-                if ((cx - px > 0) && (cx - nx > 0) && (cy - py < 0) && (cy == ny) && (cz == pz) && (cz - nz > 0)) opt = 3;
-                if ((cx - px < 0) && (cx == nx) && (cy == py) && (cy - ny > 0) && (cz - pz < 0) && (cz == nz)) opt = 6;
-                if ((cx - px < 0) && (cx == nx) && (cy == py) && (cy - ny < 0) && (cz - pz < 0) && (cz == nz)) opt = 5;
-            }
-        }
-        */
+   
 
         if (segment.type == Type.FromSide) {
             //head
@@ -2000,7 +1628,7 @@ function MoveArrow(arrowNo, segmentNo) {
 
 }
 function selectArrow(arrowNo, segmentNo) {
-    //console.log("Selected arrow: " + arrowNo+ " segment=" + segmentNo);
+    console.log("Selected arrow: " + arrowNo+ " segment=" + segmentNo);
     if (state.volume == true)
         audioClick.play();
     let group = 0;
@@ -2563,10 +2191,14 @@ function loadLevel(levelNo, nextLevel = false) {
         const response = await fetch('Levels/Level' + levelNo + '.json');
         if (response.status === 404) {
             console.error("Level " + levelNo + " not found");
+            hideAll();
+            UpdateLevelText(camera, -1);
             return;
         }
         if (!response.ok) {
             console.error("Level " + levelNo + " error");
+            hideAll();
+            UpdateLevelText(camera, -1);
             return;
         }
         const txtData = await response.text();

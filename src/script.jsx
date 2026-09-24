@@ -12,7 +12,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 
 
-const devCurrentLevelNo = 27; // Set the desired level number for development mode
+const devCurrentLevelNo = 25; // Set the desired level number for development mode
 THREE.Object3D.prototype.rotateAroundWorldAxis = function () {
 
     // rotate object around axis in world space (the axis passes through point)
@@ -196,16 +196,17 @@ const audioFailure = new Audio('failure.mp3');
 function PrepareMaterialBack(mat,color) {
     mat.transparent = true
     mat.depthTest = true
-    mat.alphaTest = 0.01
+    mat.alphaTest = 0.1
     mat.color.setHex(color);
 }
 
 function PrepareMaterial(mat,color) {
     mat.transparent = true
     mat.depthTest = true
-    mat.alphaTest = 0.01
+    mat.alphaTest = 0.1
     mat.roughness = 0.3;
     mat.metalness = 0.2;
+   // mat.alphaToCoverage= true; 
     mat.metalnessMap = textureReflection;
     if(color !== undefined) {
         mat.color.setHex(color);
@@ -216,8 +217,8 @@ function PrepareMaterialHUD(mat, color) {
     mat.transparent = true
     mat.depthTest = false
     mat.depthWrite = false
-    mat.alphaTest = 0.01
-    mat.color.setHex(color);
+     mat.color.setHex(color);
+    
 
 }
 function updateTexture(texture, repeat = false) {
@@ -231,9 +232,10 @@ function updateTexture(texture, repeat = false) {
     }
     texture.repeat.set(10, 10)
     texture.offset.set(0.5, 0.5)
+    texture.colorSpace = THREE.SRGBColorSpace; 
     texture.generateMipmaps = true;
     texture.needsUpdate = true;
-    texture.minFilter = THREE.LinearFilter;
+    texture.minFilter = THREE.LinearMipmapLinearFilter;
     texture.maxFilter = THREE.LinearFilter
     texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
 }

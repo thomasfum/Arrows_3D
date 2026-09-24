@@ -8,11 +8,9 @@ import * as THREE from 'three'
 import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 
 
-const devCurrentLevelNo = 25; // Set the desired level number for development mode
+const devCurrentLevelNo = 28; // Set the desired level number for development mode
 THREE.Object3D.prototype.rotateAroundWorldAxis = function () {
 
     // rotate object around axis in world space (the axis passes through point)
@@ -419,12 +417,13 @@ const target = new THREE.WebGLRenderTarget(size.width, size.height, {
     samples: 4 // Choices are usually 2, 4, or 8. 4 is the sweet spot.
 });
 
+/*
 // 3. Pass the target to your composer
 const composer = new EffectComposer(renderer, target);
 
 const renderPass = new RenderPass(scene, camera);
 composer.addPass(renderPass);
-
+*/
 
 // Camera Controls
 const controls = new TrackballControls(camera, renderer.domElement);
@@ -2802,7 +2801,7 @@ function addEvents() {
                         return;
                         */
                     if (state.editionModeCreation == true) {
-                        console.log("Edition mode: add point to arrow " + state.editionMode_arrowSelected + " at face " + clickedObject.userData.faceNo + " x=" + x + " y=" + y);
+                        //console.log("Edition mode: add point to arrow " + state.editionMode_arrowSelected + " at face " + clickedObject.userData.faceNo + " x=" + x + " y=" + y);
                         let currentArrow = undefined;
                         //add point to current arrow
                         for (let i = 0; i < arrows.length; i++) {

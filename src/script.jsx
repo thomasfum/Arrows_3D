@@ -10,7 +10,7 @@ import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
 
-const devCurrentLevelNo = 28; // Set the desired level number for development mode
+const devCurrentLevelNo = 30; // Set the desired level number for development mode
 THREE.Object3D.prototype.rotateAroundWorldAxis = function () {
 
     // rotate object around axis in world space (the axis passes through point)
@@ -202,8 +202,8 @@ function PrepareMaterial(mat,color) {
     mat.transparent = true
     mat.depthTest = true
     mat.alphaTest = 0.1
-    mat.roughness = 0.3;
-    mat.metalness = 0.2;
+    mat.roughness = 0.05;
+    mat.metalness = 0.05;
    // mat.alphaToCoverage= true; 
     mat.metalnessMap = textureReflection;
     if(color !== undefined) {
@@ -1275,6 +1275,31 @@ function createArrow(arrowNo, points, color) {
     arrows.push(arrow);
 }
 
+function removeArrow(arrowNo, arrow) {
+    for (let i = 0; i < arrows.length; i++) {
+      const arrow = arrows[i];
+        if (arrow.arrowNo == arrowNo) {
+            for (let j = 0; j < arrow.segments.length; j++) {
+
+                //find and remove from sceneMeshes
+                for (let k = 0; k < sceneMeshes.length; k++) {
+                    if (sceneMeshes[k] === arrow.segments[j].mesh) {
+                        sceneMeshes.splice(k, 1);
+                       // console.log("remove seg" + arrow.segments[j].segmentNo);
+                        break;
+                    }
+                }
+                group.remove(arrow.segments[j].mesh);
+                group.remove(arrow.segments[j].meshBack);
+                arrow.segments[j].mesh = null;
+                arrow.segments[j].meshBack = null;
+            }
+            arrow.segments = [];
+            arrows.splice(i, 1);
+        }
+
+    }
+}
 function showGroup(arrow) {
     if (arrow.group > 0) {
         //console.log("GROUP " + arrow.group + " " + arrow.arrowNo + " + segment  " + arrow.groupPos);
@@ -1488,6 +1513,7 @@ function movearrowdirection(arrow,arrowNo, segmentNo, head, dx, dy) {
 }
 function ResetArrow(arrowNo, arrow) {
     //delete current segments
+    /*
     for (const segment of arrow.segments) {
         //console.log("Deleting segment mesh with ID: " + segment.mesh.id);
         group.remove(segment.mesh);
@@ -1495,6 +1521,8 @@ function ResetArrow(arrowNo, arrow) {
         segment.mesh = null;
         segment.meshBack = null;
     }
+    */
+    removeArrow(arrowNo, arrow);
     let points = JSON.parse(arrow.clonedArrowPoints);
     //remove arrow from list
     const index = arrows.indexOf(arrow);
@@ -1620,16 +1648,9 @@ function MoveArrow(arrowNo, segmentNo) {
             break;
         }
     }
-
-
-    
-
-
-
-
 }
 function selectArrow(arrowNo, segmentNo) {
-    console.log("Selected arrow: " + arrowNo+ " segment=" + segmentNo);
+    //console.log("Selected arrow: " + arrowNo+ " segment=" + segmentNo);
     if (state.volume == true)
         audioClick.play();
     let group = 0;
@@ -2504,26 +2525,7 @@ function addEvents() {
             if (event.code == "Delete") {
                 if (state.editionMode_arrowSelected != -1) {
                     console.log("delete arrow " + state.editionMode_arrowSelected);
-                    for (let i = 0; i < arrows.length; i++) {
-                        const arrow = arrows[i];
-                        if (arrow.arrowNo == state.editionMode_arrowSelected) {
-                            for (let j = 0; j < arrow.segments.length; j++) {
-                                group.remove(arrow.segments[j].mesh);
-                                group.remove(arrow.segments[j].meshBack);
-                                //find and remove from sceneMeshes
-                                for (let k = 0; k < sceneMeshes.length; k++) {
-                                    if (sceneMeshes[k] === arrow.segments[j].mesh) {
-                                        sceneMeshes.splice(k, 1);
-                                        break;
-                                    }
-                                }
-                            }
-                            arrow.segments = [];
-                            arrows.splice(i, 1);
-                        }
-
-                    }
-                    console.log("!!!!!! editionMode_arrowSelected =-1");
+                    removeArrow(state.editionMode_arrowSelected, arrows[state.editionMode_arrowSelected]);                
                     state.editionMode_arrowSelected = -1;
                     state.editionMode_segmentSelected = -1;
 
@@ -2801,6 +2803,20 @@ function addEvents() {
                         return;
                         */
                     if (state.editionModeCreation == true) {
+
+                        //-------------------------
+                        // check if free position
+                        if (intersects.length > 0) {
+                            if (intersects[0].object.visible === true) {
+
+                                let dist = intersects[0].point.distanceTo(intersectsFace[0].point)
+                                console.log("arrow hited !!! =>"+ dist)
+                                return;
+                            }
+                           
+                           }
+
+
                         //console.log("Edition mode: add point to arrow " + state.editionMode_arrowSelected + " at face " + clickedObject.userData.faceNo + " x=" + x + " y=" + y);
                         let currentArrow = undefined;
                         //add point to current arrow

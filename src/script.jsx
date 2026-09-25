@@ -10,7 +10,7 @@ import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
 
-const devCurrentLevelNo = 30; // Set the desired level number for development mode
+const devCurrentLevelNo = 31; // Set the desired level number for development mode
 THREE.Object3D.prototype.rotateAroundWorldAxis = function () {
 
     // rotate object around axis in world space (the axis passes through point)
@@ -202,8 +202,8 @@ function PrepareMaterial(mat,color) {
     mat.transparent = true
     mat.depthTest = true
     mat.alphaTest = 0.1
-    mat.roughness = 0.05;
-    mat.metalness = 0.05;
+    mat.roughness = 0.8;
+    mat.metalness = 0.2;
    // mat.alphaToCoverage= true; 
     mat.metalnessMap = textureReflection;
     if(color !== undefined) {
@@ -382,22 +382,24 @@ cameraOrtho.position.z = window.devicePixelRatio * 1.4;
 const sceneOrtho = new THREE.Scene();
 // Ambient light
 const ambientLight = new THREE.AmbientLight()
-ambientLight.color = new THREE.Color(0xcccccc)
-ambientLight.intensity = 3
+ambientLight.color = new THREE.Color(0xffe6cc)
+ambientLight.intensity = 2
 camera.add(ambientLight)
 
 cameraOrtho.add(ambientLight.clone())
 
 // Directional light
-const directionalLight = new THREE.DirectionalLight(0xcccccc, 0.9)
-//camera.add(directionalLight)
-directionalLight.position.set(10, 25, 100)
+const directionalLight = new THREE.DirectionalLight(0xffe6cc,0.8)
 
+//directionalLight.position.set(10, 25, 100)
+directionalLight.position.set(100 / 60, 100 / 60, 100 / 60)
+camera.add(directionalLight)
+//cameraOrtho.add(directionalLight.clone())
 
-const light = new THREE.PointLight(0xffffff, 1000)
-light.position.set(100 / 3, 100 / 3, 100 / 3)
-camera.add(light)
-cameraOrtho.add(light.clone())
+const light = new THREE.PointLight(0xffffff, 200,100)
+light.position.set(100 / 20, 100 / 20, 100 / 20)
+//-camera.add(light)
+//cameraOrtho.add(light.clone())
 
 // 1. Renderer
 const renderer = new THREE.WebGLRenderer({
@@ -431,7 +433,7 @@ const controls = new TrackballControls(camera, renderer.domElement);
 // controls.addEventListener('start', () => console.log("Controls Start Event"))
 // controls.addEventListener('end', () => console.log("Controls End Event"))
 // controls.enabled = false
-controls.rotateSpeed = 8.0 * 1.25 / window.devicePixelRatio;
+controls.rotateSpeed = 8.0 * 0.4 / window.devicePixelRatio;
 //controls.zoomLevel = 1.5; 
  controls.zoomSpeed = 1.2
 // controls.panSpeed = 0.8

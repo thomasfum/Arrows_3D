@@ -2,6 +2,7 @@
 //
 // TODO:
 // bridge: create the bump effect correctly
+// no edge: issue changing arrow iif close to edge but in different direction
 //----------------------------------------------------------------------
 
 import * as THREE from 'three'
@@ -10,7 +11,7 @@ import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
 
-const devCurrentLevelNo = 32; // Set the desired level number for development mode
+const devCurrentLevelNo = 33; // Set the desired level number for development mode
 THREE.Object3D.prototype.rotateAroundWorldAxis = function () {
 
     // rotate object around axis in world space (the axis passes through point)
@@ -2307,9 +2308,10 @@ function CreateLevel(level) {
     for (let i = 0; i < currentLevel.ArrowsPoints.length; i++) {
         createArrow(i, currentLevel.ArrowsPoints[i], ArrowColor);
     }
-    for (const edge of currentLevel.NoEdges) {
-        createNoEdge( edge.start, edge.end);
-    }
+    if (currentLevel.NoEdges != undefined)
+        for (const edge of currentLevel.NoEdges) {
+            createNoEdge( edge.start, edge.end);
+        }
 
 
 
@@ -2620,6 +2622,7 @@ function addEvents() {
                 newLevel.ArrowColor = currentLevel.ArrowColor;
                 newLevel.NbArrowsPerFace = currentLevel.NbArrowsPerFace;
                 newLevel.FaceLevels = currentLevel.FaceLevels;
+                newLevel.NoEdges = currentLevel.NoEdges;
                 let newArrowsPoints = [];
                 for (let i = 0; i < arrows.length; i++) {
                     const arrow = arrows[i];

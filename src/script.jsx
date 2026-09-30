@@ -45,6 +45,7 @@ class Level {
     ArrowColor = "0x6BFF77"; //need to be a sting as Json do not support hexanumbers 
     ArrowsPoints = new Array();
     FaceLevels = new Array();
+    NoEdges = new Array();
 };
 let currentLevel = new Level();
 
@@ -1278,7 +1279,6 @@ function createArrow(arrowNo, points, color) {
     showGroup(arrow);
     arrows.push(arrow);
 }
-
 function removeArrow(arrowNo, arrow) {
     for (let i = 0; i < arrows.length; i++) {
       const arrow = arrows[i];
@@ -1327,7 +1327,6 @@ function showGroup(arrow) {
         }
     }
 }
-
 function rotateBodySegmentMesh(segment) {
     if (segment.direction === Direction.Right) {
         segment.mesh.rotation.z = Math.PI / 2;
@@ -1539,6 +1538,66 @@ function ResetArrow(arrowNo, arrow) {
    
 
 }
+
+function checkEdgeCondition(arrowNo, head, dx, dy) {
+
+
+    if (currentLevel.NoEdges.length == 0)
+        return;
+
+
+
+    // Implement the logic for checking edge conditions here
+    let segmentFace = faces.find(face => face.faceNo === head.faceNo);
+
+
+    let boundingBox = getFaceBoundingBox(segmentFace.points);
+    const offsetx = 0.05 * 10 / currentLevel.NbArrowsPerFace; // Adjust this value to control the spacing between segments
+    const offsety = 0.05 * 10 / currentLevel.NbArrowsPerFace; // Adjust this value to control the spacing between segments
+
+
+    let xInSpaceBefore = boundingBox.x + head.x / currentLevel.NbArrowsPerFace + offsetx;
+    let yInSpaceBefore = - boundingBox.y - (head.y + 1) / currentLevel.NbArrowsPerFace + offsety;
+    let inFaceBefore = segmentInsideFace(xInSpaceBefore, yInSpaceBefore, segmentFace.points.map(p => [p.x, p.y]));
+
+
+    let xInSpaceAfter = boundingBox.x + (head.x+dx) / currentLevel.NbArrowsPerFace + offsetx;
+    let yInSpaceAfter = - boundingBox.y - (head.y +dy+ 1) / currentLevel.NbArrowsPerFace + offsety;
+    let inFaceAfter = segmentInsideFace(xInSpaceAfter, yInSpaceAfter, segmentFace.points.map(p => [p.x, p.y]));
+    
+    if (inFaceBefore == true && inFaceAfter == false) {
+
+        let found = false;
+        let othserSide = undefined
+        let othserSideX = undefined
+        let othserSideY = undefined
+        for (const edge of currentLevel.NoEdges) {
+            for (const f of edge.Faces) {
+                if (f.faceNo === head.faceNo) {
+                    if (f.sideX == head.x || f.sideY == head.y)
+                        found = true;
+                        
+                }
+                else {
+                    othserSide = f.faceNo;
+                    othserSideX = f.sideX;
+                    othserSideY = f.sideY;
+                }
+            }   
+        }
+        if (found == true && othserSide != undefined) {
+            console.log("checkEdgeCondition head at  position (" + head.x + "," + head.y + ") leaving face " + head.faceNo + " to " + othserSide +" position (" + othserSideX + "," + othserSideY + ")");
+            head.faceNo = othserSide;
+            if (othserSideX!=-1)
+                head.x = othserSideX-dx;
+            if (othserSideY != -1)
+                head.y = othserSideY-dy;
+        }
+    }
+
+
+
+}
 function MoveArrowSegments(arrowNo, segmentNo) {
     for (const arrow of arrows) {
         if (arrow.arrowNo === arrowNo) {
@@ -1556,8 +1615,11 @@ function MoveArrowSegments(arrowNo, segmentNo) {
                 if (head.direction === Direction.Up) { dx = 0; dy = -1; }
                 if (head.direction === Direction.Down) { dx = 0; dy = 1; }
 
+                //check no edge conditiion
+                checkEdgeCondition(arrowNo,head,dx,dy);
+
                 //check nex position in face
-                let collision=checkColision(arrowNo, head.faceNo, head.x + dx, head.y + dy);
+                let collision = checkColision(arrowNo, head.faceNo, head.x + dx, head.y + dy);
                 if (collision == false && arrow.stopMove != true) {
                     movearrowdirection(arrow, arrowNo, segmentNo, head, dx, dy);
                     setTimeout(function () {
@@ -1939,6 +2001,60 @@ function createSegment(arrowNo, segmentNo, faceNo, prev_faceNo, next_faceNo, typ
     }
 //-----------------------------------------------------------------
 // Faces
+function createVerticalDashedTexture(length) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 2;
+    canvas.height = 64; // Configuration verticale
+    const ctx = canvas.getContext('2d');
+
+    // Moitié supérieure blanche, moitié inférieure transparente
+    ctx.fillStyle = '#ffffff';
+    //ctx.fillRect(0, 0, 2, 50);
+    ctx.fillRect(0, 10, 2, 54);
+    //ctx.fillRect(0, 0, 2, 24);
+    //ctx.fillRect(0, 64-24, 2, 24);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    console.log("createVerticalDashedTexture length", length, "canvas.height", canvas.height);
+    // Répétition : 16 fois autour (X),length fois de haut en bas (Y)
+    texture.repeat.set(16, length);
+
+    return texture;
+}
+function createNoEdge (pointX, pointY) {
+    // edge from X to Y
+    var direction = new THREE.Vector3().subVectors(pointY, pointX);
+    var arrow = new THREE.ArrowHelper(direction, pointX);
+    console.log("createNoEdge direction", direction, "pointX", pointX, "pointY", pointY);
+    var edgeGeometry = new THREE.CylinderGeometry(0.003, 0.003, direction.length(), 16, 4);
+
+
+    const dashedTexture = createVerticalDashedTexture(direction.length() * currentLevel.NbArrowsPerFace);
+
+    const material = new THREE.MeshStandardMaterial({
+        color: 0xEFD807,          // La couleur de votre cylindre
+        alphaMap: dashedTexture,  // Utilise la texture pour gérer l'opacité
+        transparent: true,        // INDISPENSABLE pour que le transparent fonctionne
+        side: THREE.DoubleSide    // Optionnel : permet de voir l'intérieur du cylindre
+    });
+
+    var materials = [
+        material,
+        new THREE.MeshPhongMaterial({ color: 0x0000ff, transparent: true, opacity: 0 }),//remove backface
+        new THREE.MeshPhongMaterial({ color: 0xff0000, transparent: true, opacity: 0 })//remove topface
+    ];
+
+
+
+    var edge = new THREE.Mesh(edgeGeometry,  materials);
+    edge.rotation.set(arrow.rotation.x, arrow.rotation.y, arrow.rotation.z);
+    let pos=new THREE.Vector3().addVectors(pointX, direction.multiplyScalar(0.5));
+    edge.position.set(pos.x, pos.y, pos.z);
+    group.add(edge);
+    
+}
 function createFace(faceNo,points, position, rotation)
 {
 
@@ -2002,7 +2118,7 @@ function createFace(faceNo,points, position, rotation)
     faceMeshes.push(faceMesh);
 
     const faceEdgesGeometry = new THREE.EdgesGeometry(faceGeometry);
-    const faceEdges = new THREE.LineSegments(faceEdgesGeometry, new THREE.LineBasicMaterial({ color: 0xcccccc }));
+    const faceEdges = new THREE.LineSegments(faceEdgesGeometry, new THREE.LineBasicMaterial({ color: 0x777777 }));
     const fontGeometry = new TextGeometry(faceNo.toString(), {
         font: font,
         size: 0.1,
@@ -2190,6 +2306,9 @@ function CreateLevel(level) {
     }
     for (let i = 0; i < currentLevel.ArrowsPoints.length; i++) {
         createArrow(i, currentLevel.ArrowsPoints[i], ArrowColor);
+    }
+    for (const edge of currentLevel.NoEdges) {
+        createNoEdge( edge.start, edge.end);
     }
 
 

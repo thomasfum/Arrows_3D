@@ -1,7 +1,7 @@
 //----------------------------------------------------------------------
 //
 // TODO:
-
+// bridge: create the bump effect correctly
 //----------------------------------------------------------------------
 
 import * as THREE from 'three'
@@ -10,7 +10,7 @@ import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
 
-const devCurrentLevelNo = 31; // Set the desired level number for development mode
+const devCurrentLevelNo = 32; // Set the desired level number for development mode
 THREE.Object3D.prototype.rotateAroundWorldAxis = function () {
 
     // rotate object around axis in world space (the axis passes through point)
@@ -588,11 +588,13 @@ function UpdateLevelText(camera, LevelNo) {
         camera.remove(object);
     }
     let txt = "Level " + LevelNo.toString();
-    if (LevelNo == -1)
+    if (LevelNo <= 0)
+        txt = "Test Level " + Math.abs(LevelNo).toString();
+    if (LevelNo == -1001)
         txt = "You have finished all levels";
-    if (LevelNo == -2)
+    if (LevelNo == -1002)
         txt = "Next Level";
-    if (LevelNo == -3)
+    if (LevelNo == -1003)
         txt = "Retry Level";
     const fontGeometryLevel = new TextGeometry(txt, {
         font: font,
@@ -608,7 +610,7 @@ function UpdateLevelText(camera, LevelNo) {
     const fontMeshLevel = new THREE.Mesh(fontGeometryLevel, fontMaterial);
     fontMeshLevel.name = "LevelText";
     let y = 0.65;
-    if (LevelNo <0)
+    if (LevelNo <-1000)
         y = 0.1;
     fontMeshLevel.position.set(0, y, -1);
     fontMeshLevel.renderOrder = 99999;// to be in front of arrow
@@ -1596,7 +1598,7 @@ function MoveArrowSegments(arrowNo, segmentNo) {
                                     audioLevelFailure.play();
                                 setTimeout(function () {
                                     hideAll();
-                                    UpdateLevelText(camera, -3);
+                                    UpdateLevelText(camera, -1003);
                                     setTimeout(function () {
                                         loadLevel(currentLevelNo);
                                     }, 1000);
@@ -2209,20 +2211,29 @@ function CreateLevel(level) {
     setCookie("Level", currentLevelNo, 365);
 }
 function loadLevel(levelNo, nextLevel = false) {
-    console.log("Loading level " + levelNo);
+   
     (async () => {
 
-        const response = await fetch('Levels/Level' + levelNo + '.json');
+        let levelPath = 'Levels/Level';
+        if (levelNo < 1) {
+            levelNo = Math.abs(levelNo);
+            levelPath = 'Levels/TestLevel';
+            console.log("Loading Test level " + levelNo);
+        }
+        else
+            console.log("Loading level " + levelNo);
+
+        const response = await fetch(levelPath + levelNo + '.json');
         if (response.status === 404) {
             console.error("Level " + levelNo + " not found");
             hideAll();
-            UpdateLevelText(camera, -1);
+            UpdateLevelText(camera, -1001);
             return;
         }
         if (!response.ok) {
             console.error("Level " + levelNo + " error");
             hideAll();
-            UpdateLevelText(camera, -1);
+            UpdateLevelText(camera, -1001);
             return;
         }
         const txtData = await response.text();
@@ -2230,7 +2241,7 @@ function loadLevel(levelNo, nextLevel = false) {
         if (txtData[0] !== '{') { 
             console.error("Invalid JSON format for level " + levelNo);
             hideAll();
-            UpdateLevelText(camera, -1);
+            UpdateLevelText(camera, -1001);
             return;
         }
 
@@ -2239,7 +2250,7 @@ function loadLevel(levelNo, nextLevel = false) {
         if (nextLevel) {// show next level message
             // Handle any logic needed for the next level
             //----------
-            UpdateLevelText(camera, -2);
+            UpdateLevelText(camera, -1002);
             setTimeout(function () {
                 const jsonData = JSON.parse(txtData);
                 //console.log(jsonData);
@@ -2385,8 +2396,9 @@ function addEvents() {
         }
         if (event.code === "NumpadSubtract") {
             currentLevelNo--;
-            if (currentLevelNo < 1)
-                currentLevelNo = 1;
+            if (state.editionMode==false)//editmode
+                if (currentLevelNo < 1)
+                    currentLevelNo = 1;
             loadLevel(currentLevelNo);
         }
         if (event.key == "e" || event.key == "E") {

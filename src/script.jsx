@@ -2,7 +2,6 @@
 //
 // TODO:
 // bridge: create the bump effect correctly
-// no edge: issue changing arrow iif close to edge but in different direction
 //----------------------------------------------------------------------
 
 import * as THREE from 'three'
@@ -508,13 +507,11 @@ tick()
 //-----------------------------------------------------------------
 //Heads Up Display (HUD) functions
 
-
 function showHudBorder(show) {
     if (cadreMesh) {
         cadreMesh.visible = show;
     }
 }
-
 function createHudBorder() {
     cadreMesh = new THREE.Mesh(geometrySquare, materialCadre);
     cadreMesh.name = "Cadre";
@@ -667,7 +664,6 @@ function hideAll() {
         object.visible = false; // Hide the LineText object if the JSON is invalid
     }
 }
-
 function SetVolume(volume) {
    // console.log("SetVolume " + volume);
     if (volume) {
@@ -1575,8 +1571,20 @@ function checkEdgeCondition(arrowNo, head, dx, dy) {
         for (const edge of currentLevel.NoEdges) {
             for (const f of edge.Faces) {
                 if (f.faceNo === head.faceNo) {
-                    if (f.sideX == head.x || f.sideY == head.y)
-                        found = true;
+
+                    if (f.sideX == head.x) {
+                        if (f.sideX==0 && dx==-1)
+                            found = true;
+                        else if (f.sideX!=0 && dx==1)
+                            found = true;
+                    }
+                    if (f.sideY == head.y) { 
+                        if (f.sideY==0 && dy==-1)
+                            found = true;
+                        else if (f.sideY!=0 && dy==1)
+                            found = true;
+                    }
+                    
                         
                 }
                 else {
@@ -2010,14 +2018,12 @@ function createVerticalDashedTexture(length) {
 
     // Moitié supérieure blanche, moitié inférieure transparente
     ctx.fillStyle = '#ffffff';
-    //ctx.fillRect(0, 0, 2, 50);
     ctx.fillRect(0, 10, 2, 54);
-    //ctx.fillRect(0, 0, 2, 24);
-    //ctx.fillRect(0, 64-24, 2, 24);
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
+    texture.offset.set(0, -0.1);// to better align.....
     console.log("createVerticalDashedTexture length", length, "canvas.height", canvas.height);
     // Répétition : 16 fois autour (X),length fois de haut en bas (Y)
     texture.repeat.set(16, length);

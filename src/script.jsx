@@ -2,6 +2,7 @@
 //
 // TODO:
 // bridge: create the bump effect correctly
+//https://texturemap.app/normal-map-generator
 //----------------------------------------------------------------------
 
 import * as THREE from 'three'
@@ -10,7 +11,7 @@ import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
 
-const devCurrentLevelNo = 33; // Set the desired level number for development mode
+const devCurrentLevelNo = 31; // Set the desired level number for development mode
 THREE.Object3D.prototype.rotateAroundWorldAxis = function () {
 
     // rotate object around axis in world space (the axis passes through point)
@@ -172,7 +173,13 @@ const textureWhiteHead = await loader.loadAsync('arrow/head.png');
 const textureWhiteBody = await loader.loadAsync('arrow/body.png');
 const textureWhiteTail = await loader.loadAsync('arrow/tail.png');
 const textureWhiteAngle = await loader.loadAsync('arrow/angle.png');
-const textureReflection = await loader.loadAsync('arrow/reflection.png');
+//const textureBodyNormal = await loader.loadAsync('arrow/reflection.png');/
+const textureHeadNormal = await loader.loadAsync('arrow/head-normal.png');
+const textureBodyNormal = await loader.loadAsync('arrow/body-normal.png');
+const textureTailNormal = await loader.loadAsync('arrow/tail-normal.png');
+const textureAngleNormal = await loader.loadAsync('arrow/angle-normal.png');
+
+//const textureBodyNormal = await loader.loadAsync('arrow/image_f59ba8ea.jpg');
 const textureHelper1 = await loader.loadAsync('arrow/helper1.png');
 const textureHelper2 = await loader.loadAsync('arrow/helper2.png');
 const textureSquare = await loader.loadAsync('arrow/square.png');
@@ -181,9 +188,14 @@ const textureReset = await loader.loadAsync('refresh-ccw.png');
 const textureVolumeOn = await loader.loadAsync('volume-2.png');
 const textureVolumeOff = await loader.loadAsync('volume-x.png');
 const textureCadre = await loader.loadAsync('cadre.png');
-const textureBridgeCentral = await loader.loadAsync('bridgeCentral.png');
-const textureBridgeSide1 = await loader.loadAsync('bridgeSide.png');
-const textureBridgeSide2 = await loader.loadAsync('bridgeSide.png');
+const textureBridgeCentral = await loader.loadAsync('bridgeCentral.png');// 'bridgeCentral.png');
+const textureBridgeSide1 = await loader.loadAsync('bridgeSide.png'); //'bridgeSide.png');
+const textureBridgeSide2 = await loader.loadAsync('bridgeSide.png'); //'bridgeSide.png');
+const textureBridgeBump = await loader.loadAsync('bridgeSpecular.png'); //'bridgeSide.png');
+const textureBridgeBumpheight = await loader.loadAsync('bridgeHeight.png'); //'bridgeSide.png');
+
+
+textureBridgeSide2.center.set(0.5, 0.5)
 textureBridgeSide2.rotation = Math.PI;
 
 const audioClick = new Audio('click.mp3');
@@ -196,6 +208,8 @@ function PrepareMaterialBack(mat,color) {
     mat.transparent = true
     mat.depthTest = true
     mat.alphaTest = 0.1
+    mat.metalness = 1;
+    mat.roughness = 0.1;
     mat.color.setHex(color);
 }
 
@@ -203,14 +217,15 @@ function PrepareMaterial(mat,color) {
     mat.transparent = true
     mat.depthTest = true
     mat.alphaTest = 0.1
-    mat.roughness = 0.8;
+    mat.roughness = 0.1;
     mat.metalness = 0.2;
-   // mat.alphaToCoverage= true; 
-    mat.metalnessMap = textureReflection;
+    // mat.alphaToCoverage= true;
+    //mat.metalnessMap = textureBodyNormal;
+    //mat.normalMap = textureBodyNormal;
     if(color !== undefined) {
         mat.color.setHex(color);
     }
-    mat.metalnessMap = textureReflection;
+   // mat.metalnessMap = textureBodyNormal;
 }
 function PrepareMaterialHUD(mat, color) { 
     mat.transparent = true
@@ -220,7 +235,7 @@ function PrepareMaterialHUD(mat, color) {
     
 
 }
-function updateTexture(texture, repeat = false) {
+function updateTexture(texture, repeat = false, forecRGB = true) {
     if (repeat == false) {
         texture.wrapS = THREE.ClampToEdgeWrapping;
         texture.wrapT = THREE.ClampToEdgeWrapping;
@@ -229,9 +244,11 @@ function updateTexture(texture, repeat = false) {
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
     }
-    texture.repeat.set(10, 10)
-    texture.offset.set(0.5, 0.5)
-    texture.colorSpace = THREE.SRGBColorSpace; 
+   // texture.repeat.set(10, 10)
+   // texture.offset.set(0.5, 0.5)
+    if (forecRGB) {
+        texture.colorSpace = THREE.SRGBColorSpace; 
+    }
     texture.generateMipmaps = true;
     texture.needsUpdate = true;
     texture.minFilter = THREE.LinearMipmapLinearFilter;
@@ -239,26 +256,52 @@ function updateTexture(texture, repeat = false) {
     texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
 }
 
+
+function addNormalMap(material, textureNormal) {
+    material.normalMap = textureNormal;
+    textureNormal.colorSpace = THREE.NoColorSpace; // Très important !
+    material.normalScale = new THREE.Vector2(0.05, -0.05);
+    //material.roughness = 1;
+    //material.metalness = 0;
+    //material.normalMapType = THREE.ObjectSpaceNormalMap;
+    material.shininess = 100;            // Plus cette valeur est haute, plus le reflet est petit et saturé
+   // material.specular = new THREE.Color(0x333333); // Couleur du reflet brillant
+    /*
+    
+    material.displacementMap = textureNormal;
+    material.displacementScale = 0.004;
+    */
+    /*
+    material.normalMap = textureNormal;
+    material.normalScale = new THREE.Vector2(10, -1);
+    material.shininess = 100;
+    */
+}
 const materialHead = new THREE.MeshStandardMaterial({ map: textureWhiteHead, side: THREE.FrontSide });
 PrepareMaterial(materialHead);
+addNormalMap(materialHead, textureHeadNormal);  
+
 
 const materialHeadBack = new THREE.MeshBasicMaterial({ map: textureWhiteHead, side: THREE.BackSide });
 PrepareMaterialBack(materialHeadBack, ArrowColorBack);
 
-const materialBody = new THREE.MeshStandardMaterial({ map: textureWhiteBody, side: THREE.FrontSide });
+const materialBody = new THREE.MeshStandardMaterial({ map: textureWhiteBody,  side: THREE.FrontSide });
 PrepareMaterial(materialBody);
+addNormalMap(materialBody, textureBodyNormal);  
 
 const materialBodyBack = new THREE.MeshBasicMaterial ({ map: textureWhiteBody, side: THREE.BackSide });
 PrepareMaterialBack(materialBodyBack, ArrowColorBack);
 
-const materialTail = new THREE.MeshStandardMaterial( { map: textureWhiteTail, side: THREE.FrontSide } );
+const materialTail = new THREE.MeshStandardMaterial({ map: textureWhiteTail, side: THREE.FrontSide });
 PrepareMaterial(materialTail);
+addNormalMap(materialTail, textureTailNormal);  
 
 const materialTailBack = new THREE.MeshBasicMaterial( { map: textureWhiteTail, side: THREE.BackSide } );
 PrepareMaterialBack(materialTailBack, ArrowColorBack);
 
-const materialAngle = new THREE.MeshStandardMaterial( { map: textureWhiteAngle, side: THREE.FrontSide } );
+const materialAngle = new THREE.MeshStandardMaterial({ map: textureWhiteAngle, side: THREE.FrontSide });
 PrepareMaterial(materialAngle);
+addNormalMap(materialAngle, textureAngleNormal);
 
 const materialAngleBack = new THREE.MeshBasicMaterial( { map: textureWhiteAngle, side: THREE.BackSide } );
 PrepareMaterialBack(materialAngleBack, ArrowColorBack);
@@ -269,29 +312,37 @@ PrepareMaterial(materialHelper1);
 const materialHelper2 = new THREE.MeshBasicMaterial({ map: textureHelper2, side: THREE.FrontSide });
 PrepareMaterial(materialHelper2);
 
-const materialHeadSelected = new THREE.MeshBasicMaterial({ map: textureWhiteHead, side: THREE.FrontSide });
-PrepareMaterial(materialHeadSelected,ArrowColorSelected);
+const materialHeadSelected = new THREE.MeshStandardMaterial({ map: textureWhiteHead, side: THREE.FrontSide });
+PrepareMaterial(materialHeadSelected, ArrowColorSelected);
+addNormalMap(materialHeadSelected, textureHeadNormal);
 
-const materialBodySelected = new THREE.MeshBasicMaterial({ map: textureWhiteBody, side: THREE.FrontSide });
-PrepareMaterial(materialBodySelected,ArrowColorSelected);
+const materialBodySelected = new THREE.MeshStandardMaterial({ map: textureWhiteBody, side: THREE.FrontSide });
+PrepareMaterial(materialBodySelected, ArrowColorSelected);
+addNormalMap(materialBodySelected, textureBodyNormal);
 
-const materialTailSelected = new THREE.MeshBasicMaterial({ map: textureWhiteTail, side: THREE.FrontSide });
-PrepareMaterial(materialTailSelected,ArrowColorSelected);
+const materialTailSelected = new THREE.MeshStandardMaterial({ map: textureWhiteTail, side: THREE.FrontSide });
+PrepareMaterial(materialTailSelected, ArrowColorSelected);
+addNormalMap(materialTailSelected, textureTailNormal);
 
-const materialAngleSelected = new THREE.MeshBasicMaterial({ map: textureWhiteAngle, side: THREE.FrontSide });
-PrepareMaterial(materialAngleSelected,ArrowColorSelected);
+const materialAngleSelected = new THREE.MeshStandardMaterial({ map: textureWhiteAngle, side: THREE.FrontSide });
+PrepareMaterial(materialAngleSelected, ArrowColorSelected);
+addNormalMap(materialAngleSelected, textureAngleNormal);
 
-const materialHeadRed = new THREE.MeshBasicMaterial({ map: textureWhiteHead, side: THREE.FrontSide });
+const materialHeadRed = new THREE.MeshStandardMaterial({ map: textureWhiteHead, side: THREE.FrontSide });
 PrepareMaterial(materialHeadRed, ArrowColorRed);
+addNormalMap(materialHeadRed, textureHeadNormal);
 
-const materialBodyRed = new THREE.MeshBasicMaterial({ map: textureWhiteBody, side: THREE.FrontSide });
+const materialBodyRed = new THREE.MeshStandardMaterial({ map: textureWhiteBody, side: THREE.FrontSide });
 PrepareMaterial(materialBodyRed, ArrowColorRed);
+addNormalMap(materialBodyRed, textureBodyNormal);
 
-const materialTailRed = new THREE.MeshBasicMaterial({ map: textureWhiteTail, side: THREE.FrontSide });
+const materialTailRed = new THREE.MeshStandardMaterial({ map: textureWhiteTail, side: THREE.FrontSide });
 PrepareMaterial(materialTailRed, ArrowColorRed);
+addNormalMap(materialTailRed, textureTailNormal);
 
-const materialAngleRed = new THREE.MeshBasicMaterial({ map: textureWhiteAngle, side: THREE.FrontSide });
+const materialAngleRed = new THREE.MeshStandardMaterial({ map: textureWhiteAngle, side: THREE.FrontSide });
 PrepareMaterial(materialAngleRed, ArrowColorRed);
+addNormalMap(materialAngleRed, textureAngleNormal);
 
 const materialCube = new THREE.MeshStandardMaterial({
     map: null,
@@ -321,14 +372,10 @@ PrepareMaterialHUD(materialVolume, 0x8381FF);
 const materialCadre = new THREE.MeshBasicMaterial({ map: textureCadre, side: THREE.DoubleSide });
 PrepareMaterialHUD(materialCadre, ArrowColorRed);
 
-const materialBridgeCentral = new THREE.MeshBasicMaterial({ map: textureBridgeCentral, side: THREE.DoubleSide });
-PrepareMaterial(materialBridgeCentral);  
+const materialBridgeCentral = new THREE.MeshPhongMaterial({ map: textureBridgeCentral, normalMap: textureBridgeBump, side: THREE.DoubleSide, transparent: true, depthTest: true, alphaTest: 0.1, normalScale: new THREE.Vector2(10, -10), shininess: 100, displacementMap: textureBridgeBumpheight, displacementScale: 0.004});
+const materialBridgeSide1 = new THREE.MeshPhongMaterial({ map: textureBridgeSide1, normalMap: textureBridgeBump, side: THREE.DoubleSide, transparent: true, depthTest: true, alphaTest: 0.1, normalScale: new THREE.Vector2(10, -10), shininess: 100, displacementMap: textureBridgeBumpheight, displacementScale: 0.004 });
+const materialBridgeSide2 = new THREE.MeshPhongMaterial({ map: textureBridgeSide2, normalMap: textureBridgeBump, side: THREE.DoubleSide, transparent: true, depthTest: true, alphaTest: 0.1, normalScale: new THREE.Vector2(10, -10), shininess: 100, displacementMap: textureBridgeBumpheight, displacementScale: 0.004 });
 
-const materialBridgeSide1 = new THREE.MeshBasicMaterial({ map: textureBridgeSide1, side: THREE.DoubleSide });
-PrepareMaterial(materialBridgeSide1);  
-
-const materialBridgeSide2 = new THREE.MeshBasicMaterial({ map: textureBridgeSide2, side: THREE.DoubleSide });
-PrepareMaterial(materialBridgeSide2);  
 
 
 
@@ -348,15 +395,17 @@ const HeartPoints = [
 
 const heartShape = new THREE.Shape(HeartPoints);
 const heartGeometry = new THREE.ShapeGeometry(heartShape);
-
+/*
 const squareShape = new THREE.Shape()
     .moveTo(-0.05, -0.05)
     .lineTo(-0.05, 0.05)
     .lineTo(0.05, 0.05)
     .lineTo(0.05, -0.05)
     .closePath();
-let geometrySquare = new THREE.ShapeGeometry(squareShape);
-
+//let geometrySquare = new THREE.ShapeGeometry(squareShape);
+*/
+let geometrySquare = new THREE.PlaneGeometry(0.1, 0.1, 64, 64);
+geometrySquare.computeTangents(); 
 
 let group = new THREE.Group();// everything rotating
 scene.background = textureBackground
@@ -384,24 +433,35 @@ const sceneOrtho = new THREE.Scene();
 // Ambient light
 const ambientLight = new THREE.AmbientLight()
 ambientLight.color = new THREE.Color(0xffe6cc)
-ambientLight.intensity = 2
+ambientLight.intensity = 1//2
 camera.add(ambientLight)
 
 cameraOrtho.add(ambientLight.clone())
-
+/*
 // Directional light
-const directionalLight = new THREE.DirectionalLight(0xffe6cc,0.8)
+const directionalLight = new THREE.DirectionalLight(0xffe6cc, 2);// 0.8)
 
 //directionalLight.position.set(10, 25, 100)
 directionalLight.position.set(100 / 60, 100 / 60, 100 / 60)
 camera.add(directionalLight)
 //cameraOrtho.add(directionalLight.clone())
+*/
 
-const light = new THREE.PointLight(0xffffff, 200,100)
-light.position.set(100 / 20, 100 / 20, 100 / 20)
-//-camera.add(light)
-//cameraOrtho.add(light.clone())
 
+const light = new THREE.PointLight(0xffe6cc, 40)
+light.position.set(1.5,1.5,1.5)
+camera.add(light)
+cameraOrtho.add(light.clone())
+
+/*
+
+const intensity = 180; const width = 10; const height = 10;
+const rectLight = new THREE.RectAreaLight(0xffe6cc, intensity, width, height);
+rectLight.position.set(15, 15, 15);
+rectLight.lookAt(0, 0, 0);
+camera.add(rectLight);
+cameraOrtho.add(rectLight.clone());
+*/
 // 1. Renderer
 const renderer = new THREE.WebGLRenderer({
     canvas: canvas,
@@ -422,12 +482,12 @@ const target = new THREE.WebGLRenderTarget(size.width, size.height, {
 
 /*
 // 3. Pass the target to your composer
-const composer = new EffectComposer(renderer, target);
+//const composer = new EffectComposer(renderer, target);
 
-const renderPass = new RenderPass(scene, camera);
-composer.addPass(renderPass);
+//const renderPass = new RenderPass(scene, camera);
+//composer.addPass(renderPass);
+
 */
-
 // Camera Controls
 const controls = new TrackballControls(camera, renderer.domElement);
 // controls.addEventListener('change', () => console.log("Controls Change"))
@@ -516,7 +576,7 @@ function createHudBorder() {
     cadreMesh = new THREE.Mesh(geometrySquare, materialCadre);
     cadreMesh.name = "Cadre";
     cadreMesh.renderOrder = 99999;// to be in front of arrow
-    cadreMesh.scale.set(10 * sizes.width, 10 * sizes.height, 1);
+    cadreMesh.scale.set(12 * sizes.width, 12 * sizes.height, 1);
     cadreMesh.visible = false;
     sceneOrtho.add(cadreMesh);
 }
@@ -821,12 +881,12 @@ function createArrow(arrowNo, points, color) {
             oldSegDirection = segDirection;
             
         }
-        /*
-        else {
-            console.log("probably changing face");
-            arrow.segments.push(createSegment(arrowNo, segmentNo++, points[i].z, oldFaceNo,-1, segType, segDirection, segDirection,-1, points[i].x, points[i].y));
-        }
-        */
+        
+       // else {
+       //     console.log("probably changing face");
+       //     arrow.segments.push(createSegment(arrowNo, segmentNo++, points[i].z, oldFaceNo,-1, segType, segDirection, segDirection,-1, points[i].x, points[i].y));
+      //  }
+        
         oldFaceNo = points[i].z;
         //console.log("FROM 2 " + oldSegDirection.description)
     }
@@ -1513,15 +1573,6 @@ function movearrowdirection(arrow,arrowNo, segmentNo, head, dx, dy) {
 }
 function ResetArrow(arrowNo, arrow) {
     //delete current segments
-    /*
-    for (const segment of arrow.segments) {
-        //console.log("Deleting segment mesh with ID: " + segment.mesh.id);
-        group.remove(segment.mesh);
-        group.remove(segment.meshBack);
-        segment.mesh = null;
-        segment.meshBack = null;
-    }
-    */
     removeArrow(arrowNo, arrow);
     let points = JSON.parse(arrow.clonedArrowPoints);
     //remove arrow from list
@@ -1538,8 +1589,8 @@ function ResetArrow(arrowNo, arrow) {
 
 function checkEdgeCondition(arrowNo, head, dx, dy) {
 
-
-    if (currentLevel.NoEdges.length == 0)
+    
+    if (currentLevel.NoEdges == undefined || currentLevel.NoEdges.length == 0)
         return;
 
 
@@ -1957,7 +2008,7 @@ function createSegment(arrowNo, segmentNo, faceNo, prev_faceNo, next_faceNo, typ
     //let heightInGrig = Math.round(currentLevel.NbArrowsPerFace * boundingBox.height);
     //let widthInGrig = Math.round(currentLevel.NbArrowsPerFace * boundingBox.width);
 
-    // segment.mesh.position.set(segmentFace.points[0].x + x + 0.025, - segmentFace.points[0].y - y + 0.075, faces[0].position.z /*+ 0.025*/);
+    // segment.mesh.position.set(segmentFace.points[0].x + x + 0.025, - segmentFace.points[0].y - y + 0.075, faces[0].position.z );//+ 0.025
     //let xInSpace =  segmentFace.points[0].x + x / currentLevel.NbArrowsPerFace + offsetx;
     //let yInSpace =  - segmentFace.points[0].y - (y + 1) / currentLevel.NbArrowsPerFace + offsety;
     let xInSpace = boundingBox.x + x / currentLevel.NbArrowsPerFace + offsetx;
@@ -1975,9 +2026,9 @@ function createSegment(arrowNo, segmentNo, faceNo, prev_faceNo, next_faceNo, typ
     //console.log("segment face", letZ)
     letZ = Math.abs(letZ);
     //------------------------------------------
-    segment.mesh.position.set(xInSpace, yInSpace, letZ/* + 0.025*/);
+    segment.mesh.position.set(xInSpace, yInSpace, letZ);//+ 0.025
     if (segment.meshBack) {
-        segment.meshBack.position.set(xInSpace, yInSpace, letZ/* + 0.025*/);
+        segment.meshBack.position.set(xInSpace, yInSpace, letZ);//+ 0.025
     }
 
         segment.inFace = segmentInsideFace(xInSpace, yInSpace, segmentFace.points.map(p => [p.x, p.y]));
@@ -2105,16 +2156,7 @@ function createFace(faceNo,points, position, rotation)
     faceMesh.rotateAroundWorldAxis(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1, 0),rotation.y);
     faceMesh.rotateAroundWorldAxis(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 1),rotation.z);
     let backward = -0.0001;
-    /*
-    if (position.x == 0)
-        position.x=0.1
-
-    if (position.y == 0)
-        position.y = 0.1
-
-    if (position.z == 0)
-        position.z = 0.1;
-*/        
+       
 
     faceMesh.position.set(position.x + dx*backward, position.y + dy*backward, position.z + dz*backward); // to prevet Z fighting with arrows
     //faceMesh.position.set(position.x, position.y, position.z);
@@ -2140,23 +2182,7 @@ function createFace(faceNo,points, position, rotation)
     
     const bary=centroid(points);
     fontMesh.position.set(bary[0] * 1.5, bary[1] * 1.5, 0);
-    /*
-    let dirV = new THREE.Vector3(1, 0, 0);
-    if (dir === FaceDirection.Front) dirV.set(0, 0, -1);
-    if (dir === FaceDirection.Back) dirV.set(0, 0, 1);
-    if (dir === FaceDirection.Left) dirV.set(-1, 0, 0);
-    if (dir === FaceDirection.Right) dirV.set(1, 0, 0);
-    if (dir === FaceDirection.Up) dirV.set(0, 1, 0);
-    if (dir === FaceDirection.Down) dirV.set(0, -1, 0);
-    //normalize the direction vector (convert to vector of length 1)
-    dirV.normalize();
-    const origin = new THREE.Vector3(bary[0] * 1.5, bary[1] * 1.5, 0);
-    const length = 1;
-    const hex = 0xffff00;
 
-    const arrowHelper = new THREE.ArrowHelper(dirV, origin, length, hex);
-    scene.add(arrowHelper);
-    */
    // console.log("bary face " + faceNo + " x=" + bary[0] + " y=" + bary[1] + ")");
     fontMesh.visible = false; // Initially hide the face number
 
@@ -2277,7 +2303,7 @@ function CreateLevel(level) {
 
     updateTexture(textureWhiteHead);
     updateTexture(textureWhiteBody);
-    updateTexture(textureReflection);
+    //updateTexture(textureBodyNormal);
     updateTexture(textureWhiteTail);
     updateTexture(textureWhiteAngle);
     updateTexture(textureHelper1);
@@ -2292,6 +2318,9 @@ function CreateLevel(level) {
     updateTexture(textureBridgeSide1);
     updateTexture(textureBridgeSide2);
 
+    //updateTexture(textureBridgeBump,false,false);
+    updateTexture(textureBridgeBumpheight, false, false);
+ 
     materialHead.color.setHex(ArrowColor);
     materialBody.color.setHex(ArrowColor);
     materialTail.color.setHex(ArrowColor);
@@ -2299,8 +2328,10 @@ function CreateLevel(level) {
     materialHelper1.color.setHex(ArrowColor);
     materialHelper2.color.setHex(ArrowColor);
 
-    geometrySquare = new THREE.ShapeGeometry(squareShape);
+    //geometrySquare = new THREE.ShapeGeometry(squareShape);
+    geometrySquare = new THREE.PlaneGeometry(0.1, 0.1, 64, 64);
     geometrySquare.scale(10 / currentLevel.NbArrowsPerFace , 10 / currentLevel.NbArrowsPerFace , 1);
+    geometrySquare.computeTangents();
 
     textureSquare.repeat.set(currentLevel.NbArrowsPerFace, currentLevel.NbArrowsPerFace);
     if (currentLevel.NbArrowsPerFace%2==0)
@@ -2475,10 +2506,9 @@ function addtxtAngle(axis, p, c, n) {
         txt_np += "(p" + axis + " - n" + axis + "<0)";
 
     }
-    /*
-    if (txt_np != "")
-        txt = txt + " && " + txt_np;
-        */
+    
+   // if (txt_np != "")    txt = txt + " && " + txt_np;
+    
     return txt;
 }
 function addEvents() {

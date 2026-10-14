@@ -1,7 +1,6 @@
 //----------------------------------------------------------------------
 //
 // TODO:
-// level 16
 // loader
 // tablet ombre
 //https://texturemap.app/normal-map-generator
@@ -233,7 +232,7 @@ function PrepareMaterialHUD(mat, color) {
     mat.transparent = true
     mat.depthTest = false
     mat.depthWrite = false
-     mat.color.setHex(color);
+    mat.color.setHex(color);
     
 
 }
@@ -388,6 +387,7 @@ const font = await loaderFont.loadAsync('optimer_regular.typeface.json');
 
 
 //geometries
+let geometryIcon = new THREE.PlaneGeometry(0.1, 0.1, 64, 64);
 let geometrySquare = new THREE.PlaneGeometry(0.1, 0.1, 64, 64);
 geometrySquare.computeTangents(); 
 
@@ -557,7 +557,7 @@ function showHudBorder(show) {
     }
 }
 function createHudBorder() {
-    cadreMesh = new THREE.Mesh(geometrySquare, materialCadre);
+    cadreMesh = new THREE.Mesh(geometryIcon, materialCadre);
     cadreMesh.name = "Cadre";
     cadreMesh.renderOrder = 99999;// to be in front of arrow
     cadreMesh.scale.set(10 * sizes.width, 10 * sizes.height, 1);
@@ -565,7 +565,7 @@ function createHudBorder() {
     sceneOrtho.add(cadreMesh);
 }
 function CreateVolume() {
-    volumeMesh = new THREE.Mesh(geometrySquare, materialVolume);
+    volumeMesh = new THREE.Mesh(geometryIcon, materialVolume);
     volumeMesh.name = "Volume";
     volumeMesh.renderOrder = 99999;// to be in front of arrow
 
@@ -576,7 +576,7 @@ function CreateVolume() {
     sceneOrtho.add(volumeMesh);
 }
 function CreateReset() {
-    resetMesh = new THREE.Mesh(geometrySquare, materialReset);
+    resetMesh = new THREE.Mesh(geometryIcon, materialReset);
     resetMesh.name = "Reset";
     resetMesh.renderOrder = 99999;// to be in front of arrow
     resetMesh.position.set(sizes.width/2-40,-sizes.height/2+80, 0);
@@ -589,7 +589,7 @@ function CreateReset() {
 
     
 }
-function CreateHeartNumber(camera, HeartNbTotal) {
+function CreateHeartNumber( HeartNbTotal) {
 
     for (let i = 0; i < hearts.length; i++) {
         const object = sceneOrtho.getObjectByName("Heart" + i);
@@ -600,10 +600,10 @@ function CreateHeartNumber(camera, HeartNbTotal) {
         }
     hearts = [];
     for (let i = 0; i < HeartNbTotal; i++) {
-        let heartMesh = new THREE.Mesh(geometrySquare, materialHeart);
+        let heartMesh = new THREE.Mesh(geometryIcon, materialHeart);
         heartMesh.name = "Heart" + i;
         heartMesh.renderOrder = 99999;// to be in front of arrow
-        hearts.push(heartMesh);
+       hearts.push(heartMesh);
         //heartMesh.position.set((i * 0.12) - (HeartNbTotal / 2) * 0.12 + 0.06, -0.65, -1);
         heartMesh.position.set((i * 40) - (HeartNbTotal / 2) * 40 +20, -sizes.height / 2 + 80, -1);
         //heartMesh.scale.set(0.8, 0.8, 0.8);
@@ -613,6 +613,7 @@ function CreateHeartNumber(camera, HeartNbTotal) {
     }
 }
 function UpdateHeartNumber(camera, HeartNb, HeartNbTotal) {
+    
     for (let i = 0; i < hearts.length; i++) {
         if (i < HeartNb) {
             hearts[i].material = materialHeart;
@@ -620,7 +621,7 @@ function UpdateHeartNumber(camera, HeartNb, HeartNbTotal) {
             hearts[i].material = materialHeartGray;
         }
     }
-
+    
 
 }
 function UpdateLevelText(camera, LevelNo) {
@@ -1500,8 +1501,13 @@ function checkColision(arrowNo, faceNo, x, y) {
     for (const arrow of arrows) {
         for (const segment of arrow.segments) {
             if (segment.faceNo === faceNo && segment.x === x && segment.y === y) {
-                console.log("Collision detected for arrow " + arrowNo + " at face " + faceNo + " position (" + x + "," + y + ")");
-                return true;
+                if (segment.type == Type.Tail && arrowNo == segment.arrowNo) {//case at level 16
+                }
+                else {
+                    console.log("Collision detected for arrow " + arrowNo + " at face " + faceNo + " position (" + x + "," + y + ")");
+                    return true;
+                
+                }   
             }
         }
     }
@@ -2311,7 +2317,7 @@ function CreateLevel(level) {
     materialAngle.color.setHex(ArrowColor);
     materialHelper1.color.setHex(ArrowColor);
     materialHelper2.color.setHex(ArrowColor);
-
+  
     //geometrySquare = new THREE.ShapeGeometry(squareShape);
     geometrySquare = new THREE.PlaneGeometry(0.1, 0.1, 64, 64);
     geometrySquare.scale(10 / currentLevel.NbArrowsPerFace , 10 / currentLevel.NbArrowsPerFace , 1);
@@ -2346,7 +2352,7 @@ function CreateLevel(level) {
     
     UpdateLineText(camera, currentLevel.NbArrow);
     UpdateLevelText(camera, currentLevelNo);
-    CreateHeartNumber(camera, currentLevel.NbHeartTotal);
+    CreateHeartNumber(currentLevel.NbHeartTotal);
     //console.log("Heart=" + currentLevel.NbHeart + "/" + currentLevel.NbHeartTotal);
     UpdateHeartNumber(camera, currentLevel.NbHeart, currentLevel.NbHeartTotal);
 

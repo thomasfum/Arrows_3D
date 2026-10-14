@@ -1,7 +1,9 @@
 //----------------------------------------------------------------------
 //
 // TODO:
-// bridge: create the bump effect correctly
+// level 16
+// loader
+// tablet ombre
 //https://texturemap.app/normal-map-generator
 //----------------------------------------------------------------------
 
@@ -386,24 +388,6 @@ const font = await loaderFont.loadAsync('optimer_regular.typeface.json');
 
 
 //geometries
-const HeartPoints = [
-    new THREE.Vector2(-0.05, -0.05),
-    new THREE.Vector2(-0.05, 0.05),  
-    new THREE.Vector2(0.05, 0.05),
-    new THREE.Vector2(0.05, -0.05)
-];
-
-const heartShape = new THREE.Shape(HeartPoints);
-const heartGeometry = new THREE.ShapeGeometry(heartShape);
-/*
-const squareShape = new THREE.Shape()
-    .moveTo(-0.05, -0.05)
-    .lineTo(-0.05, 0.05)
-    .lineTo(0.05, 0.05)
-    .lineTo(0.05, -0.05)
-    .closePath();
-//let geometrySquare = new THREE.ShapeGeometry(squareShape);
-*/
 let geometrySquare = new THREE.PlaneGeometry(0.1, 0.1, 64, 64);
 geometrySquare.computeTangents(); 
 
@@ -576,12 +560,12 @@ function createHudBorder() {
     cadreMesh = new THREE.Mesh(geometrySquare, materialCadre);
     cadreMesh.name = "Cadre";
     cadreMesh.renderOrder = 99999;// to be in front of arrow
-    cadreMesh.scale.set(12 * sizes.width, 12 * sizes.height, 1);
+    cadreMesh.scale.set(10 * sizes.width, 10 * sizes.height, 1);
     cadreMesh.visible = false;
     sceneOrtho.add(cadreMesh);
 }
 function CreateVolume() {
-    volumeMesh = new THREE.Mesh(heartGeometry, materialVolume);
+    volumeMesh = new THREE.Mesh(geometrySquare, materialVolume);
     volumeMesh.name = "Volume";
     volumeMesh.renderOrder = 99999;// to be in front of arrow
 
@@ -592,7 +576,7 @@ function CreateVolume() {
     sceneOrtho.add(volumeMesh);
 }
 function CreateReset() {
-    resetMesh = new THREE.Mesh(heartGeometry, materialReset);
+    resetMesh = new THREE.Mesh(geometrySquare, materialReset);
     resetMesh.name = "Reset";
     resetMesh.renderOrder = 99999;// to be in front of arrow
     resetMesh.position.set(sizes.width/2-40,-sizes.height/2+80, 0);
@@ -616,7 +600,7 @@ function CreateHeartNumber(camera, HeartNbTotal) {
         }
     hearts = [];
     for (let i = 0; i < HeartNbTotal; i++) {
-        let heartMesh = new THREE.Mesh(heartGeometry, materialHeart);
+        let heartMesh = new THREE.Mesh(geometrySquare, materialHeart);
         heartMesh.name = "Heart" + i;
         heartMesh.renderOrder = 99999;// to be in front of arrow
         hearts.push(heartMesh);

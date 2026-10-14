@@ -1,9 +1,7 @@
 //----------------------------------------------------------------------
 //
 // TODO:
-// rename app
 // tablet ombre ( precision: "highp")
-// favicon.ico 404 (Not Found)
 //https://texturemap.app/normal-map-generator
 //----------------------------------------------------------------------
 

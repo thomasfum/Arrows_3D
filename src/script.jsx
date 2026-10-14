@@ -1,8 +1,9 @@
 //----------------------------------------------------------------------
 //
 // TODO:
-// loader
-// tablet ombre
+// rename app
+// tablet ombre ( precision: "highp")
+// favicon.ico 404 (Not Found)
 //https://texturemap.app/normal-map-generator
 //----------------------------------------------------------------------
 
@@ -10,6 +11,8 @@ import * as THREE from 'three'
 import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+
+document.body.style.backgroundImage = `url('${import.meta.env.BASE_URL}stars2.jpg')`;
 
 
 const devCurrentLevelNo = 31; // Set the desired level number for development mode
@@ -104,8 +107,7 @@ let volumeMesh = undefined
 let resetMesh = undefined
 let cadreMesh = undefined
 
-
-
+let currentLevelNo = 1;
 const state = {
     width: 0,
     height: 0,
@@ -164,40 +166,102 @@ const canvas = document.querySelector('canvas.webgl')
 
 // Scene
 const scene = new THREE.Scene()
+const sceneOrtho = new THREE.Scene();
 const raycaster = new THREE.Raycaster()
 const raycasterHUD = new THREE.Raycaster()
 
+
+const progressBar = document.getElementById("progress-bar");
+const progressContainer = document.getElementById("progress-container");
+const loading = document.getElementById("loading");
+
+const manager = new THREE.LoadingManager();
+
+// Update progress bar
+manager.onProgress = function (url, itemsLoaded, itemsTotal) {
+    const progress = (itemsLoaded / itemsTotal) * 100;
+    progressBar.style.width = progress + "%";
+};
+
+// Hide when done
+manager.onLoad = function () {
+
+    setTimeout(function (){
+        loading.style.display = "none";
+        prepareMaterialAndScene();
+        tick();
+    }, 2000);
+};
+
+
+
+//geometries
+const geometryIcon = new THREE.PlaneGeometry(0.1, 0.1, 64, 64);
+let geometrySquare = new THREE.PlaneGeometry(0.1, 0.1, 64, 64);
+geometrySquare.computeTangents();
+
+let group = new THREE.Group();// everything rotating
+
+// Sizes
+const sizes = {
+    width: window.innerWidth,
+    height: window.innerHeight
+}
+
+const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
+const cameraOrtho = new THREE.OrthographicCamera(-sizes.width / 2, sizes.width / 2, sizes.height / 2, -sizes.height / 2, 0.1, 10);
+
+const ambientLight = new THREE.AmbientLight()
+const light = new THREE.PointLight(0xffe6cc, 40)
+
+const renderer = new THREE.WebGLRenderer({
+    canvas: canvas,
+    antialias: true,
+    alpha: true,
+    precision: "highp" // Force la précision maximale sur tablette
+})
+
+const clock = new THREE.Clock()
+const materials = [];
+const textures = [];
+let controls;
+
 // textures
-const loader = new THREE.TextureLoader();
-const textureBackground = await loader.loadAsync( 'stars2.jpg' );
-const textureWhiteHead = await loader.loadAsync('arrow/head.png');
-const textureWhiteBody = await loader.loadAsync('arrow/body.png');
-const textureWhiteTail = await loader.loadAsync('arrow/tail.png');
-const textureWhiteAngle = await loader.loadAsync('arrow/angle.png');
+const loader = new THREE.TextureLoader(manager);
+textures["textureWhiteHead"] = loader.load('arrow/head.png');
+textures["textureWhiteBody"] = loader.load('arrow/body.png');
+textures["textureWhiteTail"] = loader.load('arrow/tail.png');
+textures["textureWhiteAngle"] = loader.load('arrow/angle.png');
 //const textureBodyNormal = await loader.loadAsync('arrow/reflection.png');/
-const textureHeadNormal = await loader.loadAsync('arrow/head-normal.png');
-const textureBodyNormal = await loader.loadAsync('arrow/body-normal.png');
-const textureTailNormal = await loader.loadAsync('arrow/tail-normal.png');
-const textureAngleNormal = await loader.loadAsync('arrow/angle-normal.png');
+textures["textureHeadNormal"] = loader.load('arrow/head-normal.png');
+textures["textureBodyNormal"] = loader.load('arrow/body-normal.png');
+textures["textureTailNormal"] = loader.load('arrow/tail-normal.png');
+textures["textureAngleNormal"] = loader.load('arrow/angle-normal.png');
 
 //const textureBodyNormal = await loader.loadAsync('arrow/image_f59ba8ea.jpg');
-const textureHelper1 = await loader.loadAsync('arrow/helper1.png');
-const textureHelper2 = await loader.loadAsync('arrow/helper2.png');
-const textureSquare = await loader.loadAsync('arrow/square.png');
-const textureWHeart = await loader.loadAsync('heart.png');
-const textureReset = await loader.loadAsync('refresh-ccw.png');
-const textureVolumeOn = await loader.loadAsync('volume-2.png');
-const textureVolumeOff = await loader.loadAsync('volume-x.png');
-const textureCadre = await loader.loadAsync('cadre.png');
-const textureBridgeCentral = await loader.loadAsync('bridgeCentral.png');// 'bridgeCentral.png');
-const textureBridgeSide1 = await loader.loadAsync('bridgeSide.png'); //'bridgeSide.png');
-const textureBridgeSide2 = await loader.loadAsync('bridgeSide.png'); //'bridgeSide.png');
-const textureBridgeBump = await loader.loadAsync('bridgeSpecular.png'); //'bridgeSide.png');
-const textureBridgeBumpheight = await loader.loadAsync('bridgeHeight.png'); //'bridgeSide.png');
+textures["textureHelper1"] = loader.load('arrow/helper1.png');
+textures["textureHelper2"] = loader.load('arrow/helper2.png');
+textures["textureSquare"] = loader.load('arrow/square.png');
+textures["textureWHeart"] = loader.load('heart.png');
+textures["textureReset"] = loader.load('refresh-ccw.png');
+textures["textureVolumeOn"] = loader.load('volume-2.png');
+textures["textureVolumeOff"] = loader.load('volume-x.png');
+textures["textureCadre"] = loader.load('cadre.png');
+textures["textureBridgeCentral"] = loader.load('bridgeCentral.png');// 'bridgeCentral.png');
+textures["textureBridgeSide1"] = loader.load('bridgeSide.png'); //'bridgeSide.png');
+textures["textureBridgeSide2"] = loader.load('bridgeSide.png'); //'bridgeSide.png');
+textures["textureBridgeBump"] = loader.load('bridgeSpecular.png'); //'bridgeSide.png');
+textures["textureBridgeBumpheight"] = loader.load('bridgeHeight.png'); //'bridgeSide.png');
 
 
-textureBridgeSide2.center.set(0.5, 0.5)
-textureBridgeSide2.rotation = Math.PI;
+//font
+const loaderFont = new FontLoader();
+const font =  await loaderFont.loadAsync('optimer_regular.typeface.json');
+/*
+const loaderFont = new FontLoader(manager);
+var font = loaderFont.load('optimer_regular.typeface.json');
+*/
+
 
 const audioClick = new Audio('click.mp3');
 const audioLevelSuccess = new Audio('levelSuccess.mp3');
@@ -278,227 +342,246 @@ function addNormalMap(material, textureNormal) {
     material.shininess = 100;
     */
 }
-const materialHead = new THREE.MeshStandardMaterial({ map: textureWhiteHead, side: THREE.FrontSide });
-PrepareMaterial(materialHead);
-addNormalMap(materialHead, textureHeadNormal);  
 
 
-const materialHeadBack = new THREE.MeshBasicMaterial({ map: textureWhiteHead, side: THREE.BackSide });
-PrepareMaterialBack(materialHeadBack, ArrowColorBack);
+function prepareMaterialAndScene() {
 
-const materialBody = new THREE.MeshStandardMaterial({ map: textureWhiteBody,  side: THREE.FrontSide });
-PrepareMaterial(materialBody);
-addNormalMap(materialBody, textureBodyNormal);  
-
-const materialBodyBack = new THREE.MeshBasicMaterial ({ map: textureWhiteBody, side: THREE.BackSide });
-PrepareMaterialBack(materialBodyBack, ArrowColorBack);
-
-const materialTail = new THREE.MeshStandardMaterial({ map: textureWhiteTail, side: THREE.FrontSide });
-PrepareMaterial(materialTail);
-addNormalMap(materialTail, textureTailNormal);  
-
-const materialTailBack = new THREE.MeshBasicMaterial( { map: textureWhiteTail, side: THREE.BackSide } );
-PrepareMaterialBack(materialTailBack, ArrowColorBack);
-
-const materialAngle = new THREE.MeshStandardMaterial({ map: textureWhiteAngle, side: THREE.FrontSide });
-PrepareMaterial(materialAngle);
-addNormalMap(materialAngle, textureAngleNormal);
-
-const materialAngleBack = new THREE.MeshBasicMaterial( { map: textureWhiteAngle, side: THREE.BackSide } );
-PrepareMaterialBack(materialAngleBack, ArrowColorBack);
-
-const materialHelper1 = new THREE.MeshBasicMaterial({ map: textureHelper1, side: THREE.FrontSide });
-PrepareMaterial(materialHelper1);
-
-const materialHelper2 = new THREE.MeshBasicMaterial({ map: textureHelper2, side: THREE.FrontSide });
-PrepareMaterial(materialHelper2);
-
-const materialHeadSelected = new THREE.MeshStandardMaterial({ map: textureWhiteHead, side: THREE.FrontSide });
-PrepareMaterial(materialHeadSelected, ArrowColorSelected);
-addNormalMap(materialHeadSelected, textureHeadNormal);
-
-const materialBodySelected = new THREE.MeshStandardMaterial({ map: textureWhiteBody, side: THREE.FrontSide });
-PrepareMaterial(materialBodySelected, ArrowColorSelected);
-addNormalMap(materialBodySelected, textureBodyNormal);
-
-const materialTailSelected = new THREE.MeshStandardMaterial({ map: textureWhiteTail, side: THREE.FrontSide });
-PrepareMaterial(materialTailSelected, ArrowColorSelected);
-addNormalMap(materialTailSelected, textureTailNormal);
-
-const materialAngleSelected = new THREE.MeshStandardMaterial({ map: textureWhiteAngle, side: THREE.FrontSide });
-PrepareMaterial(materialAngleSelected, ArrowColorSelected);
-addNormalMap(materialAngleSelected, textureAngleNormal);
-
-const materialHeadRed = new THREE.MeshStandardMaterial({ map: textureWhiteHead, side: THREE.FrontSide });
-PrepareMaterial(materialHeadRed, ArrowColorRed);
-addNormalMap(materialHeadRed, textureHeadNormal);
-
-const materialBodyRed = new THREE.MeshStandardMaterial({ map: textureWhiteBody, side: THREE.FrontSide });
-PrepareMaterial(materialBodyRed, ArrowColorRed);
-addNormalMap(materialBodyRed, textureBodyNormal);
-
-const materialTailRed = new THREE.MeshStandardMaterial({ map: textureWhiteTail, side: THREE.FrontSide });
-PrepareMaterial(materialTailRed, ArrowColorRed);
-addNormalMap(materialTailRed, textureTailNormal);
-
-const materialAngleRed = new THREE.MeshStandardMaterial({ map: textureWhiteAngle, side: THREE.FrontSide });
-PrepareMaterial(materialAngleRed, ArrowColorRed);
-addNormalMap(materialAngleRed, textureAngleNormal);
-
-const materialCube = new THREE.MeshStandardMaterial({
-    map: null,
-    color: 0x777777,
-    roughness: 0.3,
-    metalness: 0.2,
-    transparent: true, // Required for opacity to work
-    opacity: 0.70,       // 70% see-through
-    depthTest: true
-});
-
-const materialHeart = new THREE.MeshBasicMaterial({ map: textureWHeart, side: THREE.DoubleSide });
-PrepareMaterialHUD(materialHeart, 0xDD2E44);
+        
+    textures["textureBridgeSide2"].center.set(0.5, 0.5)
+    textures["textureBridgeSide2"].rotation = Math.PI;
+        
+    materials["materialHead"] = new THREE.MeshStandardMaterial({ map: textures["textureWhiteHead"], side: THREE.FrontSide });
+    PrepareMaterial(materials["materialHead"]);
+    addNormalMap(materials["materialHead"], textures["textureHeadNormal"]);  
 
 
-const materialHeartGray = new THREE.MeshBasicMaterial({ map: textureWHeart, side: THREE.DoubleSide });
-PrepareMaterialHUD(materialHeartGray, 0xAAAAAA);
+    materials["materialHeadBack"] = new THREE.MeshBasicMaterial({ map: textures["textureWhiteHead"] , side: THREE.BackSide });
+    PrepareMaterialBack(materials["materialHeadBack"], ArrowColorBack);
+
+    materials["materialBody"] = new THREE.MeshStandardMaterial({ map: textures["textureWhiteBody"],  side: THREE.FrontSide });
+    PrepareMaterial(materials["materialBody"]);
+    addNormalMap(materials["materialBody"], textures["textureBodyNormal"]);  
+
+    materials["materialBodyBack"]    = new THREE.MeshBasicMaterial ({ map: textures["textureWhiteBody"], side: THREE.BackSide });
+    PrepareMaterialBack(materials["materialBodyBack"], ArrowColorBack);
+
+    materials["materialTail"] = new THREE.MeshStandardMaterial({ map: textures["textureWhiteTail"], side: THREE.FrontSide });
+    PrepareMaterial(materials["materialTail"]);
+    addNormalMap(materials["materialTail"], textures["textureTailNormal"]);  
+
+    materials["materialTailBack"] = new THREE.MeshBasicMaterial( { map: textures["textureWhiteTail"], side: THREE.BackSide } );
+    PrepareMaterialBack(materials["materialTailBack"], ArrowColorBack);
+
+    materials["materialAngle"] = new THREE.MeshStandardMaterial({ map: textures["textureWhiteAngle"], side: THREE.FrontSide });
+    PrepareMaterial(materials["materialAngle"]);
+    addNormalMap(materials["materialAngle"], textures["textureAngleNormal"]);
+
+    materials["materialAngleBack"] = new THREE.MeshBasicMaterial( { map: textures["textureWhiteAngle"], side: THREE.BackSide } );
+    PrepareMaterialBack(materials["materialAngleBack"], ArrowColorBack);
+
+    materials["materialHelper1"] = new THREE.MeshBasicMaterial({ map: textures["textureHelper1"], side: THREE.FrontSide });
+    PrepareMaterial(materials["materialHelper1"]);
+
+    materials["materialHelper2"] = new THREE.MeshBasicMaterial({ map: textures["textureHelper2"], side: THREE.FrontSide });
+    PrepareMaterial(materials["materialHelper2"]);
+
+    materials["materialHeadSelected"] = new THREE.MeshStandardMaterial({ map: textures["textureWhiteHead"], side: THREE.FrontSide });
+    PrepareMaterial(materials["materialHeadSelected"], ArrowColorSelected);
+    addNormalMap(materials["materialHeadSelected"], textures["textureHeadNormal"]);
+
+    materials["materialBodySelected"] = new THREE.MeshStandardMaterial({ map: textures["textureWhiteBody"], side: THREE.FrontSide });
+    PrepareMaterial(materials["materialBodySelected"], ArrowColorSelected);
+    addNormalMap(materials["materialBodySelected"], textures["textureBodyNormal"]);
+
+    materials["materialTailSelected"] = new THREE.MeshStandardMaterial({ map: textures["textureWhiteTail"], side: THREE.FrontSide });
+    PrepareMaterial(materials["materialTailSelected"], ArrowColorSelected);
+    addNormalMap(materials["materialTailSelected"], textures["textureTailNormal"]);
+
+    materials["materialAngleSelected"] = new THREE.MeshStandardMaterial({ map: textures["textureWhiteAngle"], side: THREE.FrontSide });
+    PrepareMaterial(materials["materialAngleSelected"], ArrowColorSelected);
+    addNormalMap(materials["materialAngleSelected"], textures["textureAngleNormal"]);
+
+    materials["materialHeadRed"] = new THREE.MeshStandardMaterial({ map: textures["textureWhiteHead"], side: THREE.FrontSide });
+    PrepareMaterial(materials["materialHeadRed"], ArrowColorRed);
+    addNormalMap(materials["materialHeadRed"], textures["textureHeadNormal"]);
+
+    materials["materialBodyRed"] = new THREE.MeshStandardMaterial({ map: textures["textureWhiteBody"], side: THREE.FrontSide });
+    PrepareMaterial(materials["materialBodyRed"], ArrowColorRed);
+    addNormalMap(materials["materialBodyRed"], textures["textureBodyNormal"]);
+
+    materials["materialTailRed"] = new THREE.MeshStandardMaterial({ map: textures["textureWhiteTail"], side: THREE.FrontSide });
+    PrepareMaterial(materials["materialTailRed"], ArrowColorRed);
+    addNormalMap(materials["materialTailRed"], textures["textureTailNormal"]);
+
+    materials["materialAngleRed"] = new THREE.MeshStandardMaterial({ map: textures["textureWhiteAngle"], side: THREE.FrontSide });
+    PrepareMaterial(materials["materialAngleRed"], ArrowColorRed);
+    addNormalMap(materials["materialAngleRed"], textures["textureAngleNormal"]);
+
+    materials["materialCube"] = new THREE.MeshStandardMaterial({
+        map: null,
+        color: 0x777777,
+        roughness: 0.3,
+        metalness: 0.2,
+        transparent: true, // Required for opacity to work
+        opacity: 0.70,       // 70% see-through
+        depthTest: true
+    });
+
+    materials["materialHeart"]  = new THREE.MeshBasicMaterial({ map: textures["textureWHeart"], side: THREE.DoubleSide });
+    PrepareMaterialHUD(materials["materialHeart"], 0xDD2E44);
 
 
-const materialReset = new THREE.MeshBasicMaterial({ map: textureReset, side: THREE.DoubleSide });
-PrepareMaterialHUD(materialReset, 0x8381FF);
-
-const materialVolume = new THREE.MeshBasicMaterial({ map: textureVolumeOn, side: THREE.DoubleSide });
-PrepareMaterialHUD(materialVolume, 0x8381FF);
+    materials["materialHeartGray"] = new THREE.MeshBasicMaterial({ map: textures["textureWHeart"], side: THREE.DoubleSide });
+    PrepareMaterialHUD(materials["materialHeartGray"], 0xAAAAAA);
 
 
-const materialCadre = new THREE.MeshBasicMaterial({ map: textureCadre, side: THREE.DoubleSide });
-PrepareMaterialHUD(materialCadre, ArrowColorRed);
+    materials["materialReset"] = new THREE.MeshBasicMaterial({ map: textures["textureReset"], side: THREE.DoubleSide });
+    PrepareMaterialHUD(materials["materialReset"], 0x8381FF);
 
-const materialBridgeCentral = new THREE.MeshPhongMaterial({ map: textureBridgeCentral, normalMap: textureBridgeBump, side: THREE.DoubleSide, transparent: true, depthTest: true, alphaTest: 0.1, normalScale: new THREE.Vector2(10, -10), shininess: 100, displacementMap: textureBridgeBumpheight, displacementScale: 0.004});
-const materialBridgeSide1 = new THREE.MeshPhongMaterial({ map: textureBridgeSide1, normalMap: textureBridgeBump, side: THREE.DoubleSide, transparent: true, depthTest: true, alphaTest: 0.1, normalScale: new THREE.Vector2(10, -10), shininess: 100, displacementMap: textureBridgeBumpheight, displacementScale: 0.004 });
-const materialBridgeSide2 = new THREE.MeshPhongMaterial({ map: textureBridgeSide2, normalMap: textureBridgeBump, side: THREE.DoubleSide, transparent: true, depthTest: true, alphaTest: 0.1, normalScale: new THREE.Vector2(10, -10), shininess: 100, displacementMap: textureBridgeBumpheight, displacementScale: 0.004 });
-
+    materials["materialVolume"] = new THREE.MeshBasicMaterial({ map: textures["textureVolumeOn"], side: THREE.DoubleSide });
+    PrepareMaterialHUD(materials["materialVolume"], 0x8381FF);
 
 
+    materials["materialCadre"] = new THREE.MeshBasicMaterial({ map: textures["textureCadre"], side: THREE.DoubleSide });
+    PrepareMaterialHUD(materials["materialCadre"], ArrowColorRed);
+
+    materials["materialBridgeCentral"] = new THREE.MeshPhongMaterial({ map: textures["textureBridgeCentral"], normalMap: textures["textureBridgeBump"], side: THREE.DoubleSide, transparent: true, depthTest: true, alphaTest: 0.1, normalScale: new THREE.Vector2(10, -10), shininess: 100, displacementMap: textures["textureBridgeBumpheight"], displacementScale: 0.004});
+    materials["materialBridgeSide1"] = new THREE.MeshPhongMaterial({ map: textures["textureBridgeSide1"], normalMap: textures["textureBridgeBump"], side: THREE.DoubleSide, transparent: true, depthTest: true, alphaTest: 0.1, normalScale: new THREE.Vector2(10, -10), shininess: 100, displacementMap: textures["textureBridgeBumpheight"], displacementScale: 0.004 });
+    materials["materialBridgeSide2"] = new THREE.MeshPhongMaterial({ map: textures["textureBridgeSide2"], normalMap: textures["textureBridgeBump"], side: THREE.DoubleSide, transparent: true, depthTest: true, alphaTest: 0.1, normalScale: new THREE.Vector2(10, -10), shininess: 100, displacementMap: textures["textureBridgeBumpheight"], displacementScale: 0.004 });
 
 
-//font
-const loaderFont = new FontLoader();
-const font = await loaderFont.loadAsync('optimer_regular.typeface.json');
+
+   
+    scene.add(group);
 
 
-//geometries
-let geometryIcon = new THREE.PlaneGeometry(0.1, 0.1, 64, 64);
-let geometrySquare = new THREE.PlaneGeometry(0.1, 0.1, 64, 64);
-geometrySquare.computeTangents(); 
 
-let group = new THREE.Group();// everything rotating
-scene.background = textureBackground
-scene.add(group);
+    
+    // Camera
+  
+    camera.position.z =window.devicePixelRatio *1.8
+    scene.add(camera)
+
+    cameraOrtho.position.z = window.devicePixelRatio * 1.4;
 
 
- // Sizes
-const sizes = {
-    width: window.innerWidth,
-    height: window.innerHeight
+
+    // Ambient light
+
+    ambientLight.color = new THREE.Color(0xffe6cc)
+    ambientLight.intensity = 1//2
+    camera.add(ambientLight)
+
+    cameraOrtho.add(ambientLight.clone())
+    /*
+    // Directional light
+    const directionalLight = new THREE.DirectionalLight(0xffe6cc, 2);// 0.8)
+
+    //directionalLight.position.set(10, 25, 100)
+    directionalLight.position.set(100 / 60, 100 / 60, 100 / 60)
+    camera.add(directionalLight)
+    //cameraOrtho.add(directionalLight.clone())
+    */
+
+    
+    light.position.set(1.5,1.5,1.5)
+    camera.add(light)
+    cameraOrtho.add(light.clone())
+
+    /*
+
+    const intensity = 180; const width = 10; const height = 10;
+    const rectLight = new THREE.RectAreaLight(0xffe6cc, intensity, width, height);
+    rectLight.position.set(15, 15, 15);
+    rectLight.lookAt(0, 0, 0);
+    camera.add(rectLight);
+    cameraOrtho.add(rectLight.clone());
+    */
+    // 1. Renderer
+
+    renderer.setSize(sizes.width, sizes.height)
+    renderer.transparent = true
+    renderer.alpha = true;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // Render Loop Configuration
+    renderer.autoClear = false;
+
+    // 2. Create a WebGLMultisampleRenderTarget
+    const size = renderer.getDrawingBufferSize(new THREE.Vector2());
+    const target = new THREE.WebGLRenderTarget(size.width, size.height, {
+        samples: 4 // Choices are usually 2, 4, or 8. 4 is the sweet spot.
+    });
+
+    /*
+    // 3. Pass the target to your composer
+    //const composer = new EffectComposer(renderer, target);
+
+    //const renderPass = new RenderPass(scene, camera);
+    //composer.addPass(renderPass);
+
+    */
+    // Camera Controls
+    controls = new TrackballControls(camera, renderer.domElement);
+    // controls.addEventListener('change', () => console.log("Controls Change"))
+    // controls.addEventListener('start', () => console.log("Controls Start Event"))
+    // controls.addEventListener('end', () => console.log("Controls End Event"))
+    // controls.enabled = false
+    controls.rotateSpeed = 8.0 * 0.4 / window.devicePixelRatio;
+    //controls.zoomLevel = 1.5; 
+     controls.zoomSpeed = 1.2
+    // controls.panSpeed = 0.8
+    // controls.keys = ['KeyA', 'KeyS', 'KeyD']
+     controls.noPan = true //default false
+    // controls.noRotate = true //default false
+    // controls.noZoom = true //default false
+    // controls.staticMoving = true //default false
+    // controls.dynamicDampingFactor = 0.1
+    controls.maxDistance = 3
+    controls.minDistance = 0.5
+    //controls.dampingFactor = 0.05; // friction
+    //controls.staticMoving = true;
+    controls.dynamicDampingFactor = 0.1;
+
+    CreateReset();
+    createHudBorder();
+
+
+    CreateVolume();   
+
+
+
+    addEvents();
+    console.log("Use E key to enter in Edition mode");
+    //****************************************************************
+
+    let SoundFromCookie = getCookie("Sound");
+    if (SoundFromCookie != "" && SoundFromCookie != null && SoundFromCookie != undefined) {
+        if (SoundFromCookie == "true") {
+            state.volume = true;
+        } else {
+            state.volume = false;
+        }
+    }
+    let LevelFromCookie = getCookie("Level");
+    if (LevelFromCookie != "" && LevelFromCookie != null && LevelFromCookie != undefined) {
+        currentLevelNo = parseInt(LevelFromCookie);
+        console.log("Level from cookie: " + currentLevelNo);
+    }
+
+    if (import.meta.env.DEV) {
+        // code inside here will only be included when import.meta.env.DEV is true.
+        console.log('Dev mode')
+        currentLevelNo = devCurrentLevelNo;
+        state.volume = false;
+
+    }
+    SetVolume(state.volume)
+    loadLevel(currentLevelNo);
+
+
 }
-
-// Camera
- const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
-camera.position.z =window.devicePixelRatio *1.8
-scene.add(camera)
-
-
-
-const cameraOrtho = new THREE.OrthographicCamera(-sizes.width / 2, sizes.width / 2, sizes.height / 2, -sizes.height / 2, 0.1, 10);
-cameraOrtho.position.z = window.devicePixelRatio * 1.4;
-
-
-const sceneOrtho = new THREE.Scene();
-// Ambient light
-const ambientLight = new THREE.AmbientLight()
-ambientLight.color = new THREE.Color(0xffe6cc)
-ambientLight.intensity = 1//2
-camera.add(ambientLight)
-
-cameraOrtho.add(ambientLight.clone())
-/*
-// Directional light
-const directionalLight = new THREE.DirectionalLight(0xffe6cc, 2);// 0.8)
-
-//directionalLight.position.set(10, 25, 100)
-directionalLight.position.set(100 / 60, 100 / 60, 100 / 60)
-camera.add(directionalLight)
-//cameraOrtho.add(directionalLight.clone())
-*/
-
-
-const light = new THREE.PointLight(0xffe6cc, 40)
-light.position.set(1.5,1.5,1.5)
-camera.add(light)
-cameraOrtho.add(light.clone())
-
-/*
-
-const intensity = 180; const width = 10; const height = 10;
-const rectLight = new THREE.RectAreaLight(0xffe6cc, intensity, width, height);
-rectLight.position.set(15, 15, 15);
-rectLight.lookAt(0, 0, 0);
-camera.add(rectLight);
-cameraOrtho.add(rectLight.clone());
-*/
-// 1. Renderer
-const renderer = new THREE.WebGLRenderer({
-    canvas: canvas,
-    antialias: true 
-})
-renderer.setSize(sizes.width, sizes.height)
-renderer.transparent = true
-renderer.alpha = true;
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-// Render Loop Configuration
-renderer.autoClear = false;
-
-// 2. Create a WebGLMultisampleRenderTarget
-const size = renderer.getDrawingBufferSize(new THREE.Vector2());
-const target = new THREE.WebGLRenderTarget(size.width, size.height, {
-    samples: 4 // Choices are usually 2, 4, or 8. 4 is the sweet spot.
-});
-
-/*
-// 3. Pass the target to your composer
-//const composer = new EffectComposer(renderer, target);
-
-//const renderPass = new RenderPass(scene, camera);
-//composer.addPass(renderPass);
-
-*/
-// Camera Controls
-const controls = new TrackballControls(camera, renderer.domElement);
-// controls.addEventListener('change', () => console.log("Controls Change"))
-// controls.addEventListener('start', () => console.log("Controls Start Event"))
-// controls.addEventListener('end', () => console.log("Controls End Event"))
-// controls.enabled = false
-controls.rotateSpeed = 8.0 * 0.4 / window.devicePixelRatio;
-//controls.zoomLevel = 1.5; 
- controls.zoomSpeed = 1.2
-// controls.panSpeed = 0.8
-// controls.keys = ['KeyA', 'KeyS', 'KeyD']
- controls.noPan = true //default false
-// controls.noRotate = true //default false
-// controls.noZoom = true //default false
-// controls.staticMoving = true //default false
-// controls.dynamicDampingFactor = 0.1
-controls.maxDistance = 3
-controls.minDistance = 0.5
-//controls.dampingFactor = 0.05; // friction
-//controls.staticMoving = true;
-controls.dynamicDampingFactor = 0.1;
-
-CreateReset();
-createHudBorder();
-CreateVolume();   
 // Animate
-const clock = new THREE.Clock()
+
 const tick = () =>
 {
     const elapsedTime = clock.getElapsedTime()
@@ -516,37 +599,13 @@ const tick = () =>
     window.requestAnimationFrame(tick)
 }
 
-addEvents();
-console.log("Use E key to enter in Edition mode");
 //****************************************************************
-let currentLevelNo = 1;
-let SoundFromCookie = getCookie("Sound");
-if (SoundFromCookie != "" && SoundFromCookie != null && SoundFromCookie != undefined) {
-    if (SoundFromCookie == "true") {
-        state.volume = true;
-    } else {
-        state.volume = false;
-    }
-}
-let LevelFromCookie = getCookie("Level");
-if (LevelFromCookie != "" && LevelFromCookie != null && LevelFromCookie != undefined) {
-    currentLevelNo = parseInt(LevelFromCookie);
-    console.log("Level from cookie: " + currentLevelNo);
-}
 
-if (import.meta.env.DEV) {
-    // code inside here will only be included when import.meta.env.DEV is true.
-    console.log('Dev mode')
-    currentLevelNo = devCurrentLevelNo;
-    state.volume = false;
-   
-}
-SetVolume(state.volume)
-loadLevel(currentLevelNo);
-//****************************************************************
-tick()
-
-
+//tick();
+/*setTimeout(function () {
+    tick();
+}, 1000);
+*/
 
 //-----------------------------------------------------------------
 //Heads Up Display (HUD) functions
@@ -557,7 +616,7 @@ function showHudBorder(show) {
     }
 }
 function createHudBorder() {
-    cadreMesh = new THREE.Mesh(geometryIcon, materialCadre);
+    cadreMesh = new THREE.Mesh(geometryIcon, materials["materialCadre"]);
     cadreMesh.name = "Cadre";
     cadreMesh.renderOrder = 99999;// to be in front of arrow
     cadreMesh.scale.set(10 * sizes.width, 10 * sizes.height, 1);
@@ -565,7 +624,7 @@ function createHudBorder() {
     sceneOrtho.add(cadreMesh);
 }
 function CreateVolume() {
-    volumeMesh = new THREE.Mesh(geometryIcon, materialVolume);
+    volumeMesh = new THREE.Mesh(geometryIcon, materials["materialVolume"]   );
     volumeMesh.name = "Volume";
     volumeMesh.renderOrder = 99999;// to be in front of arrow
 
@@ -576,7 +635,7 @@ function CreateVolume() {
     sceneOrtho.add(volumeMesh);
 }
 function CreateReset() {
-    resetMesh = new THREE.Mesh(geometryIcon, materialReset);
+    resetMesh = new THREE.Mesh(geometryIcon, materials["materialReset"] );
     resetMesh.name = "Reset";
     resetMesh.renderOrder = 99999;// to be in front of arrow
     resetMesh.position.set(sizes.width/2-40,-sizes.height/2+80, 0);
@@ -600,7 +659,7 @@ function CreateHeartNumber( HeartNbTotal) {
         }
     hearts = [];
     for (let i = 0; i < HeartNbTotal; i++) {
-        let heartMesh = new THREE.Mesh(geometryIcon, materialHeart);
+        let heartMesh = new THREE.Mesh(geometryIcon, materials["materialHeart"]);
         heartMesh.name = "Heart" + i;
         heartMesh.renderOrder = 99999;// to be in front of arrow
        hearts.push(heartMesh);
@@ -616,16 +675,16 @@ function UpdateHeartNumber(camera, HeartNb, HeartNbTotal) {
     
     for (let i = 0; i < hearts.length; i++) {
         if (i < HeartNb) {
-            hearts[i].material = materialHeart;
+            hearts[i].material = materials["materialHeart"];
         } else {
-            hearts[i].material = materialHeartGray;
+            hearts[i].material = materials["materialHeartGray"];
         }
     }
     
 
 }
 function UpdateLevelText(camera, LevelNo) {
-
+    
     const object = camera.getObjectByName("LevelText");
     if (object) {
        //camera.remove(object);
@@ -664,6 +723,7 @@ function UpdateLevelText(camera, LevelNo) {
 function UpdateLineText(camera, LineNb) {
 
 
+    
     const object = camera.getObjectByName("LineText");
     if (object) {
         camera.remove(object);
@@ -676,7 +736,7 @@ function UpdateLineText(camera, LineNb) {
     else {
         txt = "Done";
     }
-
+    console.log("font", font);
     const fontGeometryLine = new TextGeometry(txt, {
         font: font,
         size: 0.04,
@@ -697,6 +757,8 @@ function UpdateLineText(camera, LineNb) {
     fontMeshLine.name = "LineText";
     fontMeshLine.renderOrder = 99999;// to be in front of arrow
     fontMeshLine.position.set(0, 0.55, -1);
+    //fontMeshLine.scale.set(0.1, 0.1, 0.1);
+    //fontMeshLine.rotateY(Math.PI/2);
     camera.add(fontMeshLine);
 }
 function hideAll() {
@@ -713,12 +775,12 @@ function SetVolume(volume) {
    // console.log("SetVolume " + volume);
     if (volume) {
         setCookie("Sound", "true");
-        materialVolume.map = textureVolumeOn;
+        materials["materialVolume"].map = textures["textureVolumeOn"];
     } else {
         setCookie("Sound", "false");
-        materialVolume.map = textureVolumeOff;
+        materials["materialVolume"].map = textures["textureVolumeOff"];
     }
-    materialVolume.needsUpdate = true;
+    materials["materialVolume"].needsUpdate = true;
 }
 
 //-----------------------------------------------------------------
@@ -1160,13 +1222,13 @@ function createArrow(arrowNo, points, color) {
         }
         
         if (opt == 1 || opt == 11) {
-            segment.mesh.material = materialBody;
+            segment.mesh.material = materials["materialBody"];
             if (opt == 11) {
-                segment.mesh.material = materialBodyRed;
+                segment.mesh.material = materials["materialBodyRed"];
                 console.log("RED!!!!")
             }
             if (segment.meshBack) {
-                segment.meshBack.material = materialBodyBack;
+                segment.meshBack.material = materials["materialBodyBack"];
             }
             rotateBodySegmentMesh(segment);
             segment.sideFixed = true;
@@ -1174,13 +1236,13 @@ function createArrow(arrowNo, points, color) {
         }
 
         if (opt == 2 || opt == 12) {
-            segment.mesh.material = materialBody;
+            segment.mesh.material = materials["materialBody"];
             if (opt == 12) {
-                segment.mesh.material = materialBodyRed;
+                segment.mesh.material = materials["materialBodyRed"];
                 console.log("RED!!!!")
             }
             if (segment.meshBack) {
-                segment.meshBack.material = materialBodyBack;
+                segment.meshBack.material = materials["materialBodyBack"];
             }
             rotateBodySegmentMesh(segment);
             segment.sideFixed = true;
@@ -1188,13 +1250,13 @@ function createArrow(arrowNo, points, color) {
         }
 
         if (opt == 3 || opt == 13) {
-            segment.mesh.material = materialAngle;
+            segment.mesh.material = materials["materialAngle"];
             if (opt == 13) {
-                segment.mesh.material = materialAngleRed;
+                segment.mesh.material = materials["materialAngleRed"];
                 console.log("RED!!!!")
             }
             segment.angleType = 2;
-            segment.meshBack.material = materialAngleBack;
+            segment.meshBack.material = materials["materialAngleBack"];
             segment.mesh.rotation.z = segmentFace.rotation.z + (Math.PI)/2;
             segment.meshBack.rotation.z = segmentFace.rotation.z + (Math.PI) / 2;
             segment.sideFixed = true;
@@ -1211,13 +1273,13 @@ function createArrow(arrowNo, points, color) {
         }
 
         if (opt == 4 || opt == 14) {
-            segment.mesh.material = materialAngle;
+            segment.mesh.material = materials["materialAngle"];
             if (opt == 14) {
-                segment.mesh.material = materialAngleRed;
+                segment.mesh.material = materials["materialAngleRed"];
                 console.log("RED!!!!")
             }
             segment.angleType = 2;
-            segment.meshBack.material = materialAngleBack;
+            segment.meshBack.material = materials["materialAngleBack"];
             segment.mesh.rotation.z = segmentFace.rotation.z - (Math.PI);
             segment.meshBack.rotation.z = segmentFace.rotation.z - (Math.PI);
             segment.sideFixed = true;
@@ -1233,13 +1295,13 @@ function createArrow(arrowNo, points, color) {
         }
 
         if (opt == 5 || opt == 15) {
-            segment.mesh.material = materialAngle;
+            segment.mesh.material = materials["materialAngle"];
             if (opt == 15) {
-                segment.mesh.material = materialAngleRed;
+                segment.mesh.material = materials["materialAngleRed"];
                 console.log("RED!!!!")
             }
             segment.angleType = 2;
-            segment.meshBack.material = materialAngleBack;
+            segment.meshBack.material = materials["materialAngleBack"];
             segment.mesh.rotation.z = segmentFace.rotation.z;
             segment.meshBack.rotation.z = segmentFace.rotation.z;
             segment.sideFixed = true;
@@ -1255,13 +1317,13 @@ function createArrow(arrowNo, points, color) {
         }
         if (opt == 6 || opt == 16) {
             
-            segment.mesh.material = materialAngle;
+            segment.mesh.material = materials["materialAngle"];
             if (opt == 16) {
-                segment.mesh.material = materialAngleRed;
+                segment.mesh.material = materials["materialAngleRed"];
                 console.log("RED!!!!")
             }
             segment.angleType = 2;
-            segment.meshBack.material = materialAngleBack;
+            segment.meshBack.material = materials["materialAngleBack"];
             segment.mesh.rotation.z = segmentFace.rotation.z - (Math.PI) / 2;
             segment.meshBack.rotation.z = segmentFace.rotation.z - + (Math.PI) / 2;
             segment.sideFixed = true;
@@ -1280,12 +1342,12 @@ function createArrow(arrowNo, points, color) {
             if (i == 0) {
                 segment.sideFixed = true;
                 //console.log("TAIL " + opt + " " + segment.direction.description);
-                segment.mesh.material = materialTail;
+                segment.mesh.material = materials["materialTail"];
                 if (opt > 10) {
-                    segment.mesh.material = materialTailRed;
+                    segment.mesh.material = materials["materialTailRed"];
                 }
                 if (segment.meshBack) {
-                    segment.meshBack.material = materialTailBack;
+                    segment.meshBack.material = materials["materialTailBack"];
                 }
                 segment.sideFixedSubType = Type.Tail;
 
@@ -1293,12 +1355,12 @@ function createArrow(arrowNo, points, color) {
             if (i == arrow.segments.length - 1) {
                 segment.sideFixed = true;
                 //console.log("HEAD " + opt + " " + segment.direction.description);
-                segment.mesh.material = materialHead;
+                segment.mesh.material = materials["materialHead"];
                 if (opt > 10) {
-                    segment.mesh.material = materialHeadRed;
+                    segment.mesh.material = materials["materialHeadRed"];
                 }
                 if (segment.meshBack) {
-                    segment.meshBack.material = materialHeadBack;
+                    segment.meshBack.material = materials["materialHeadBack"];
                 }
                 segment.sideFixedSubType = Type.Head;
             }
@@ -1355,11 +1417,11 @@ function showGroup(arrow) {
                 //console.log("GROUP " + arrow.group + " " + arrow.arrowNo + " + segment FOUND " + segment.segmentNo);
                 segment.mesh.prev_material = segment.mesh.material;
                 if (arrow.groupLook == 1)
-                    segment.mesh.material = materialBridgeCentral;
+                    segment.mesh.material = materials["materialBridgeCentral"];
                 if (arrow.groupLook == 0)
-                    segment.mesh.material = materialBridgeSide1;
+                    segment.mesh.material = materials["materialBridgeSide1"];
                 if (arrow.groupLook == 2)
-                    segment.mesh.material = materialBridgeSide2;
+                    segment.mesh.material = materials["materialBridgeSide2"];
             }
             else {
                 if (segment.mesh.prev_material != undefined && segment.mesh.prev_material != null) {
@@ -1397,9 +1459,9 @@ function setAndRotateAngle(segment, segmentFace, faceCorrection,debug) {
      //   faceCorrection = -1;
 
     if (segment.prev_direction === Direction.Right && segment.direction === Direction.Down) {
-        segment.mesh.material = materialAngle;
+        segment.mesh.material = materials["materialAngle"];
         segment.angleType = 2;
-        segment.meshBack.material = materialAngleBack;
+        segment.meshBack.material = materials["materialAngleBack"];
 
         segment.mesh.rotation.z = segmentFace.rotation.z - (Math.PI);
         segment.meshBack.rotation.z = segmentFace.rotation.z - (Math.PI);
@@ -1411,11 +1473,11 @@ function setAndRotateAngle(segment, segmentFace, faceCorrection,debug) {
 
     } else if (segment.prev_direction === Direction.Down && segment.direction === Direction.Right) {
         if (debug == true)
-            segment.mesh.material = materialAngleRed;
+            segment.mesh.material = materials["materialAngleRed"];
         else
-            segment.mesh.material = materialAngle;
+            segment.mesh.material = materials["materialAngle"];
         segment.angleType = 1;
-        segment.meshBack.material = materialAngleBack;
+        segment.meshBack.material = materials["materialAngleBack"];
 
         segment.mesh.rotation.z = segmentFace.rotation.z + 0;
         segment.meshBack.rotation.z = segmentFace.rotation.z + 0;
@@ -1425,29 +1487,29 @@ function setAndRotateAngle(segment, segmentFace, faceCorrection,debug) {
         }
     } else if (segment.prev_direction === Direction.Right && segment.direction === Direction.Up) {
         if (debug == true)
-            segment.mesh.material = materialAngleRed;
+            segment.mesh.material = materials["materialAngleRed"];
         else
-            segment.mesh.material = materialAngle;
+            segment.mesh.material = materials["materialAngle"];
         segment.angleType = 1;
-        segment.meshBack.material = materialAngleBack;
+        segment.meshBack.material = materials["materialAngleBack"];
 
         segment.mesh.rotation.z = segmentFace.rotation.z + (Math.PI / 2) * faceCorrection;
         segment.meshBack.rotation.z = segmentFace.rotation.z + (Math.PI / 2) * faceCorrection;
     } else if (segment.prev_direction === Direction.Up && segment.direction === Direction.Right) {
-        segment.mesh.material = materialAngle;
+        segment.mesh.material = materials["materialAngle"];
         segment.angleType = 1;
-        segment.meshBack.material = materialAngleBack;
+        segment.meshBack.material = materials["materialAngleBack"];
 
         segment.mesh.rotation.z = segmentFace.rotation.z + (3 * Math.PI / 2) * faceCorrection;
         segment.meshBack.rotation.z = segmentFace.rotation.z + (3 * Math.PI / 2) * faceCorrection;
 
     } else if (segment.prev_direction === Direction.Up && segment.direction === Direction.Left) {
         if (debug == true)
-            segment.mesh.material = materialAngleRed;
+            segment.mesh.material = materials["materialAngleRed"];
         else
-            segment.mesh.material = materialAngle;
+            segment.mesh.material = materials["materialAngle"];
         segment.angleType = 1;
-        segment.meshBack.material = materialAngleBack;
+        segment.meshBack.material = materials["materialAngleBack"];
 
         segment.mesh.rotation.z = segmentFace.rotation.z + Math.PI;
         segment.meshBack.rotation.z = segmentFace.rotation.z + Math.PI ;
@@ -1458,26 +1520,26 @@ function setAndRotateAngle(segment, segmentFace, faceCorrection,debug) {
 
     } else if (segment.prev_direction === Direction.Left && segment.direction === Direction.Down) {
         if (debug == true)
-            segment.mesh.material = materialAngleRed;
+            segment.mesh.material = materials["materialAngleRed"];
         else
-            segment.mesh.material = materialAngle;
+            segment.mesh.material = materials["materialAngle"];
         segment.angleType = 1;
-        segment.meshBack.material = materialAngleBack;
+        segment.meshBack.material = materials["materialAngleBack"];
 
         segment.mesh.rotation.z = segmentFace.rotation.z + (3 * Math.PI / 2) * faceCorrection;
         segment.meshBack.rotation.z = segmentFace.rotation.z + (3 * Math.PI / 2) * faceCorrection;
 
     } else if (segment.prev_direction === Direction.Down && segment.direction === Direction.Left) {
-        segment.mesh.material = materialAngle;
+        segment.mesh.material = materials["materialAngle"];
         segment.angleType = 1;
-        segment.meshBack.material = materialAngleBack;
+        segment.meshBack.material = materials["materialAngleBack"];
 
         segment.mesh.rotation.z = segmentFace.rotation.z + (Math.PI / 2) * faceCorrection;
         segment.meshBack.rotation.z = segmentFace.rotation.z + (Math.PI / 2) * faceCorrection;
     } else if (segment.prev_direction === Direction.Left && segment.direction === Direction.Up) {
-        segment.mesh.material = materialAngle;
+        segment.mesh.material = materials["materialAngle"];
         segment.angleType = 1;
-        segment.meshBack.material = materialAngleBack;
+        segment.meshBack.material = materials["materialAngleBack"];
 
             segment.mesh.rotation.z = segmentFace.rotation.z + 0;
             segment.meshBack.rotation.z = segmentFace.rotation.z + 0;
@@ -1491,9 +1553,9 @@ function setAndRotateAngle(segment, segmentFace, faceCorrection,debug) {
         console.warn("angle not handled " + segment.segmentNo + " " + segment.prev_direction.description + "=>" + segment.direction.description);
 
         
-    segment.mesh.material = materialAngle;
+    segment.mesh.material = materials["materialAngle"];
     segment.angleType = 1;
-    segment.meshBack.material = materialAngleBack;
+    segment.meshBack.material = materials["materialAngleBack"];
     
 
 }
@@ -1538,8 +1600,8 @@ function movearrowdirection(arrow,arrowNo, segmentNo, head, dx, dy) {
     
     let lastHead = arrow.segments[arrow.segments.length - 2];
     lastHead.type = Type.Body;
-    lastHead.mesh.material = materialBody;
-    lastHead.meshBack.material = materialBodyBack;
+    lastHead.mesh.material = materials["materialBody"];
+    lastHead.meshBack.material = materials["materialBodyBack"];
     showGroup(arrow);
 
     // check if all has left the faces
@@ -1805,22 +1867,22 @@ function setColorArrow(arrowNo, color) {
 
                 if (color === 2) {//red
                     if (segment.type === Type.Head) 
-                        segment.mesh.material = materialHeadRed;
+                        segment.mesh.material = materials["materialHeadRed"];
                     else if (segment.type === Type.Body) 
-                        segment.mesh.material = materialBodyRed;
+                        segment.mesh.material = materials["materialBodyRed"];
                     else if (segment.type === Type.Tail) 
-                        segment.mesh.material = materialTailRed;
+                        segment.mesh.material = materials["materialTailRed"];
                     else if (segment.type === Type.Angle) 
-                           segment.mesh.material = materialAngleRed;
+                           segment.mesh.material = materials["materialAngleRed"];
                     else if (segment.type === Type.ToSide || segment.type === Type.FromSide) {
                         if (segment.sideFixedSubType === Type.Body) 
-                            segment.mesh.material = materialBodyRed;
+                            segment.mesh.material = materials["materialBodyRed"];
                          else if (segment.sideFixedSubType === Type.Angle) 
-                            segment.mesh.material = materialAngleRed;
+                            segment.mesh.material = materials["materialAngleRed"];
                         else if (segment.sideFixedSubType == Type.Head)
-                            segment.mesh.material = materialHeadRed;  
+                            segment.mesh.material = materials["materialHeadRed"];  
                         else if (segment.sideFixedSubType == Type.Tail)
-                            segment.mesh.material = materialTailRed;  
+                            segment.mesh.material = materials["materialTailRed"];  
                     }
                     else
                         console.error("setColorArrow unknown segment type " + segment.type.description);
@@ -1828,50 +1890,50 @@ function setColorArrow(arrowNo, color) {
 
                 if (color === 1) {
                     if (segment.type === Type.Head) 
-                        segment.mesh.material = materialHeadSelected;
+                        segment.mesh.material = materials["materialHeadSelected"];
                      else if (segment.type === Type.Body) 
-                        segment.mesh.material = materialBodySelected;
+                        segment.mesh.material = materials["materialBodySelected"];
                      else if (segment.type === Type.Tail) 
-                        segment.mesh.material = materialTailSelected;
+                        segment.mesh.material = materials["materialTailSelected"];
                      else if (segment.type === Type.Angle) 
-                        segment.mesh.material = materialAngleSelected;
+                        segment.mesh.material = materials["materialAngleSelected"];
                      else if (segment.type === Type.ToSide || segment.type === Type.FromSide) {
                         if (segment.sideFixedSubType === Type.Body) 
-                            segment.mesh.material = materialBodySelected;
+                            segment.mesh.material = materials["materialBodySelected"];
                         else if (segment.sideFixedSubType === Type.Angle) 
-                            segment.mesh.material = materialAngleSelected;
+                            segment.mesh.material = materials["materialAngleSelected"];
                         else if (segment.sideFixedSubType == Type.Head)
-                            segment.mesh.material = materialHeadSelected;
+                            segment.mesh.material = materials["materialHeadSelected"];
                         else if (segment.sideFixedSubType == Type.Tail)
-                            segment.mesh.material = materialTailSelected;  
+                            segment.mesh.material = materials["materialTailSelected"];  
                     }
                     else
                         console.error("setColorArrow unknown segment type " + segment.type.description);
                 } 
                 if (color === 0) {
                     if (segment.type === Type.Head) {
-                        segment.mesh.material = materialHead;
-                        segment.meshBack.material = materialHeadBack;
+                        segment.mesh.material = materials["materialHead"];
+                        segment.meshBack.material = materials["materialHeadBack"];
                     } else if (segment.type === Type.Body) {
-                        segment.mesh.material = materialBody;
-                        segment.meshBack.material = materialBodyBack;
+                        segment.mesh.material = materials["materialBody"];
+                        segment.meshBack.material = materials["materialBodyBack"];
                     } else if (segment.type === Type.Tail) {
-                        segment.mesh.material = materialTail;
-                        segment.meshBack.material = materialTailBack;
+                        segment.mesh.material = materials["materialTail"];
+                        segment.meshBack.material = materials["materialTailBack"];
                     } else if (segment.type === Type.Angle) {
                         if (segment.angleType === 1) {
-                            segment.mesh.material = materialAngle;
-                            segment.meshBack.material = materialAngleBack;
+                            segment.mesh.material = materials["materialAngle"];
+                            segment.meshBack.material = materials["materialAngleBack"];
                         }
                 } else if (segment.type === Type.ToSide || segment.type === Type.FromSide) {
                         if (segment.sideFixedSubType === Type.Body) 
-                        segment.mesh.material = materialBody;
+                        segment.mesh.material = materials["materialBody"];
                         else if (segment.sideFixedSubType === Type.Angle) 
-                            segment.mesh.material = materialAngle;
+                            segment.mesh.material = materials["materialAngle"];
                         else if (segment.sideFixedSubType == Type.Head)
-                            segment.mesh.material = materialHead;
+                            segment.mesh.material = materials["materialHead"];
                         else if (segment.sideFixedSubType == Type.Tail)
-                            segment.mesh.material = materialTail;  
+                            segment.mesh.material = materials["materialTail"];  
                 }
                     else
                     console.error("setColorArrow unknown segment type " + segment.type.description);
@@ -1945,25 +2007,25 @@ function createSegment(arrowNo, segmentNo, faceNo, prev_faceNo, next_faceNo, typ
     //console.log("createSegment no=" + segment.segmentNo + " face " + segment.faceNo + " type " + segment.type.description + " dir " + segment.prev_direction.description +" =>" + segment.direction.description);
 
     if (type === Type.Head) {
-        segment.mesh = new THREE.Mesh(geometrySquare, materialHead,);
-        segment.meshBack = new THREE.Mesh(geometrySquare,materialHeadBack);
+        segment.mesh = new THREE.Mesh(geometrySquare, materials["materialHead"],);
+        segment.meshBack = new THREE.Mesh(geometrySquare,materials["materialHeadBack"]);
     } else if (type === Type.Body) {
-        segment.mesh = new THREE.Mesh(geometrySquare, materialBody);
-        segment.meshBack = new THREE.Mesh(geometrySquare, materialBodyBack);
+        segment.mesh = new THREE.Mesh(geometrySquare, materials["materialBody"]);
+        segment.meshBack = new THREE.Mesh(geometrySquare, materials["materialBodyBack"]);
     } else if (type === Type.Tail) {    
-        segment.mesh = new THREE.Mesh( geometrySquare, materialTail ) ;
-        segment.meshBack = new THREE.Mesh(geometrySquare, materialTailBack);
+        segment.mesh = new THREE.Mesh( geometrySquare, materials["materialTail"] ) ;
+        segment.meshBack = new THREE.Mesh(geometrySquare, materials["materialTailBack"]);
     } else if (type === Type.Angle) {   
-        // segment.mesh = new THREE.Mesh( geometrySquare, materialAngle ) ;
+        // segment.mesh = new THREE.Mesh( geometrySquare, materials["materialAngle"] ) ;
     } else if (type == Type.ToSide) {
         //console.log("createSegment TO between faces, seg no=" + segment.segmentNo + " face " + segment.faceNo + " type " + segment.type.description + " direction " + segment.direction.description);
-        segment.mesh = new THREE.Mesh(geometrySquare, materialHelper1);
-        segment.meshBack = new THREE.Mesh(geometrySquare, materialHelper1);
+        segment.mesh = new THREE.Mesh(geometrySquare, materials["materialHelper1"]);
+        segment.meshBack = new THREE.Mesh(geometrySquare, materials["materialHelper1"]);
     }
     else if (type == Type.FromSide) {
        // console.log("createSegment FROM between faces, seg no=" + segment.segmentNo + " face " + segment.faceNo + " dir: " + segment.prev_direction.description + " => " + segment.direction.description + " =>" + segment.next_direction.description + "; face:" + segment.prev_faceDirection.description + " => " + segment.faceDirection.description+ " =>" + segment.next_faceDirection.description);
-        segment.mesh = new THREE.Mesh(geometrySquare, materialHelper2);
-        segment.meshBack = new THREE.Mesh(geometrySquare, materialHelper2);
+        segment.mesh = new THREE.Mesh(geometrySquare, materials["materialHelper2"]);
+        segment.meshBack = new THREE.Mesh(geometrySquare, materials["materialHelper2"]);
     }
 
       
@@ -1972,8 +2034,8 @@ function createSegment(arrowNo, segmentNo, faceNo, prev_faceNo, next_faceNo, typ
     }
     if (type === Type.Angle) {//in same face
 
-        segment.mesh = new THREE.Mesh(geometrySquare, materialAngle);
-        segment.meshBack = new THREE.Mesh(geometrySquare, materialAngleBack);
+        segment.mesh = new THREE.Mesh(geometrySquare, materials["materialAngle"]);
+        segment.meshBack = new THREE.Mesh(geometrySquare, materials["materialAngleBack"]);
         //console.log("angle" + segment.segmentNo + " " + prev_direction.description+"=>"+direction.description);
         let faceCorrection = 1;
         //console.log("face angle " + segmentFace.direction.description);
@@ -2108,7 +2170,7 @@ function createFace(faceNo,points, position, rotation)
 
     const faceShape = new THREE.Shape(points);//.closePath();
     const faceGeometry = new THREE.ShapeGeometry(faceShape);
-    const faceMesh = new THREE.Mesh(faceGeometry, materialCube);
+    const faceMesh = new THREE.Mesh(faceGeometry, materials["materialCube"]);
     
     let dir = undefined;
     let dx = 0;
@@ -2291,43 +2353,44 @@ function CreateLevel(level) {
     
     
 
-    updateTexture(textureWhiteHead);
-    updateTexture(textureWhiteBody);
-    //updateTexture(textureBodyNormal);
-    updateTexture(textureWhiteTail);
-    updateTexture(textureWhiteAngle);
-    updateTexture(textureHelper1);
-    updateTexture(textureHelper2);
-    updateTexture(textureSquare,true);
-    updateTexture(textureWHeart);
-    updateTexture(textureReset);
-    updateTexture(textureVolumeOff);
-    updateTexture(textureVolumeOn);
-    updateTexture(textureCadre);
-    updateTexture(textureBridgeCentral);
-    updateTexture(textureBridgeSide1);
-    updateTexture(textureBridgeSide2);
+    updateTexture(textures["textureWhiteHead"]);
+    updateTexture(textures["textureWhiteBody"]);
+    //updateTexture(textures["textureBodyNormal"]);
+    updateTexture(textures["textureWhiteTail"]);
+    updateTexture(textures["textureWhiteAngle"]);
+    updateTexture(textures["textureHelper1"]);
+    updateTexture(textures["textureHelper2"]);
+    updateTexture(textures["textureSquare"], true);
+    updateTexture(textures["textureWHeart"]);
+    updateTexture(textures["textureReset"]);
+    updateTexture(textures["textureVolumeOff"]);
+    updateTexture(textures["textureVolumeOn"]);
+    updateTexture(textures["textureCadre"]);
+    updateTexture(textures["textureBridgeCentral"]);
+    updateTexture(textures["textureBridgeSide1"]);
+    updateTexture(textures["textureBridgeSide2"]);
 
-    //updateTexture(textureBridgeBump,false,false);
-    updateTexture(textureBridgeBumpheight, false, false);
+    //updateTexture(textures["textureBridgeBump"], false, false);
+    updateTexture(textures["textureBridgeBumpheight"], false, false);
  
-    materialHead.color.setHex(ArrowColor);
-    materialBody.color.setHex(ArrowColor);
-    materialTail.color.setHex(ArrowColor);
-    materialAngle.color.setHex(ArrowColor);
-    materialHelper1.color.setHex(ArrowColor);
-    materialHelper2.color.setHex(ArrowColor);
+    materials["materialHead"].color.setHex(ArrowColor);
+    materials["materialBody"].color.setHex(ArrowColor);
+    materials["materialTail"].color.setHex(ArrowColor);
+    materials["materialAngle"].color.setHex(ArrowColor);
+    materials["materialHelper1"].color.setHex(ArrowColor);
+    materials["materialHelper2"].color.setHex(ArrowColor);
   
     //geometrySquare = new THREE.ShapeGeometry(squareShape);
     geometrySquare = new THREE.PlaneGeometry(0.1, 0.1, 64, 64);
     geometrySquare.scale(10 / currentLevel.NbArrowsPerFace , 10 / currentLevel.NbArrowsPerFace , 1);
     geometrySquare.computeTangents();
 
-    textureSquare.repeat.set(currentLevel.NbArrowsPerFace, currentLevel.NbArrowsPerFace);
+
+    textures["textureSquare"].repeat.set(currentLevel.NbArrowsPerFace, currentLevel.NbArrowsPerFace);
     if (currentLevel.NbArrowsPerFace%2==0)
-        textureSquare.center.set(0.5, 0.5 );
-    textureSquare.needsUpdate = true;
-    materialCube.needsUpdate = true;
+        textures["textureSquare"].center.set(0.5, 0.5 );
+    textures["textureSquare"].needsUpdate = true;
+    materials["materialCube"].needsUpdate = true;
 
     for (const face of currentLevel.FaceLevels) {
         createFace(face.faceNo, face.points, face.position, face.rotation);
@@ -2560,7 +2623,7 @@ function addEvents() {
                 console.log("   arrows can be selected by clicking on them");
                 console.log("   del: delete current arrow");
                 console.log("   g: show groups of arrows");
-                materialCube.map = textureSquare;
+                materialCube.map = textures["textureSquare"];
                 materialCube.transparent = false; // Required for opacity to work
                 materialCube.opacity = 1;       // 100% see-through
                 materialCube.depthTest = true;

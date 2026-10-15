@@ -1,6 +1,7 @@
 //----------------------------------------------------------------------
 //
 // TODO:
+// use ausio loader https://threejs.org/docs/#AudioLoader
 // tablet ombre ( precision: "highp") + powerPreference: "high-performance", + geometrySquare.computeVertexNormals(); removed
 //https://texturemap.app/normal-map-generator
 //----------------------------------------------------------------------

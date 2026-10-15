@@ -1,7 +1,7 @@
 //----------------------------------------------------------------------
 //
 // TODO:
-// tablet ombre ( precision: "highp")
+// tablet ombre ( precision: "highp") + powerPreference: "high-performance", + geometrySquare.computeVertexNormals(); removed
 //https://texturemap.app/normal-map-generator
 //----------------------------------------------------------------------
 
@@ -196,7 +196,14 @@ manager.onLoad = function () {
 //geometries
 const geometryIcon = new THREE.PlaneGeometry(0.1, 0.1, 64, 64);
 let geometrySquare = new THREE.PlaneGeometry(0.1, 0.1, 64, 64);
+
+/*
+// 1. On s'assure que les normales de base sont propres
+geometrySquare.computeVertexNormals();
+
+// 2. On calcule les tangentes APRES les normales
 geometrySquare.computeTangents();
+*/
 
 let group = new THREE.Group();// everything rotating
 
@@ -216,6 +223,7 @@ const renderer = new THREE.WebGLRenderer({
     canvas: canvas,
     antialias: true,
     alpha: true,
+    powerPreference: "high-performance",
     precision: "highp" // Force la précision maximale sur tablette
 })
 
@@ -231,10 +239,10 @@ textures["textureWhiteBody"] = loader.load('arrow/body.png');
 textures["textureWhiteTail"] = loader.load('arrow/tail.png');
 textures["textureWhiteAngle"] = loader.load('arrow/angle.png');
 //const textureBodyNormal = await loader.loadAsync('arrow/reflection.png');/
-textures["textureHeadNormal"] = loader.load('arrow/head-normal.png');
-textures["textureBodyNormal"] = loader.load('arrow/body-normal.png');
-textures["textureTailNormal"] = loader.load('arrow/tail-normal.png');
-textures["textureAngleNormal"] = loader.load('arrow/angle-normal.png');
+textures["textureHeadNormal"] = loader.load('arrow/head-normal_OpenGL.png');
+textures["textureBodyNormal"] = loader.load('arrow/body-normal_OpenGL.png');
+textures["textureTailNormal"] = loader.load('arrow/tail-normal_OpenGL.png');
+textures["textureAngleNormal"] = loader.load('arrow/angle-normal_OpenGL.png');
 
 //const textureBodyNormal = await loader.loadAsync('arrow/image_f59ba8ea.jpg');
 textures["textureHelper1"] = loader.load('arrow/helper1.png');
@@ -323,7 +331,8 @@ function updateTexture(texture, repeat = false, forecRGB = true) {
 function addNormalMap(material, textureNormal) {
     material.normalMap = textureNormal;
     textureNormal.colorSpace = THREE.NoColorSpace; // Très important !
-    material.normalScale = new THREE.Vector2(0.05, -0.05);
+    // material.normalScale = new THREE.Vector2(0.05, -0.05);
+    material.normalScale = new THREE.Vector2(0.05, 0.05);
     //material.roughness = 1;
     //material.metalness = 0;
     //material.normalMapType = THREE.ObjectSpaceNormalMap;

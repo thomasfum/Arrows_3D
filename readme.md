@@ -1,4 +1,4 @@
-# LabCube project
+# Arrows_3D project
 
 ## Description
 Implementation in js with three. js of an android game app.

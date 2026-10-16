@@ -3,7 +3,7 @@ import restart from 'vite-plugin-restart'
 export default {
 
 
-    base: "/Arrows_3D/",
+    base: "/Arrows_3D/dist/",
     esbuild: {
         supported: {
             'top-level-await': true
